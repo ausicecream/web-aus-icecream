@@ -26,26 +26,40 @@ def init_db():
     if not os.path.exists(DB_PATH):
         conn = get_db()
         c = conn.cursor()
-        c.execute('''CREATE TABLE IF NOT EXISTS pesanan 
-                     (bil_no INTEGER PRIMARY KEY AUTOINCREMENT, nama TEXT, tel_no TEXT, tarikh TEXT, alamat TEXT, 
-                      package TEXT, qty INTEGER, total_price REAL, discount REAL, transport REAL, deposit REAL, balance REAL)''')
-        c.execute('''CREATE TABLE IF NOT EXISTS stock_perisa 
-                     (perisa TEXT PRIMARY KEY, in_qty INTEGER DEFAULT 0, out_qty INTEGER DEFAULT 0, balance INTEGER DEFAULT 0)''')
-        c.execute('''CREATE TABLE IF NOT EXISTS stock_cone 
-                     (cone TEXT PRIMARY KEY, in_qty INTEGER DEFAULT 0, out_qty INTEGER DEFAULT 0, balance INTEGER DEFAULT 0)''')
+		
+	# Buat table pesanan kalau belum ada (tanpa resit_path dulu)
+    c.execute('''CREATE TABLE IF NOT EXISTS pesanan
+                 (bil_no INTEGER PRIMARY KEY AUTOINCREMENT, 
+                  nama TEXT, tel_no TEXT, tarikh TEXT, alamat TEXT,
+                  package TEXT, qty INTEGER, total_price REAL, discount REAL, 
+                  transport REAL, deposit REAL, balance REAL)''')
 
-        # Default stock
-        perisa_list = ['COKELAT', 'OREO', 'STRAWBAREY', 'JAGUNG', 'KELADI']
-        cone_list = ['MINI', 'MEDIUM', 'DOUBLE']
+    # Semak dan tambah column resit_path kalau belum ada
+    c.execute("PRAGMA table_info(pesanan)")
+    columns = [col[1] for col in c.fetchall()]
+    if 'resit_path' not in columns:
+        c.execute("ALTER TABLE pesanan ADD COLUMN resit_path TEXT")
+        print("Column 'resit_path' ditambah ke table pesanan di Render")
 
-        for p in perisa_list:
-            c.execute("INSERT OR IGNORE INTO stock_perisa (perisa) VALUES (?)", (p,))
-        for cone in cone_list:
-            c.execute("INSERT OR IGNORE INTO stock_cone (cone) VALUES (?)", (cone,))
+    # Table stock perisa
+    c.execute('''CREATE TABLE IF NOT EXISTS stock_perisa
+                 (perisa TEXT PRIMARY KEY, in_qty INTEGER DEFAULT 0, out_qty INTEGER DEFAULT 0, balance INTEGER DEFAULT 0)''')
 
-        conn.commit()
-        conn.close()
-        print("Database aus.db dicipta dan diinisialisasi.")
+    # Table stock cone
+    c.execute('''CREATE TABLE IF NOT EXISTS stock_cone
+                 (cone TEXT PRIMARY KEY, in_qty INTEGER DEFAULT 0, out_qty INTEGER DEFAULT 0, balance INTEGER DEFAULT 0)''')
+
+    # Default stok (hanya masukkan kalau belum ada)
+    perisa_list = ['COKELAT', 'OREO', 'STRAWBAREY', 'JAGUNG', 'KELADI']
+    cone_list = ['MINI', 'MEDIUM', 'DOUBLE']
+    for p in perisa_list:
+        c.execute("INSERT OR IGNORE INTO stock_perisa (perisa) VALUES (?)", (p,))
+    for cone in cone_list:
+        c.execute("INSERT OR IGNORE INTO stock_cone (cone) VALUES (?)", (cone,))
+
+    conn.commit()
+    conn.close()
+    print("Database aus.db disemak dan diinisialisasi.")
 
 init_db()  # Jalankan sekali
 
