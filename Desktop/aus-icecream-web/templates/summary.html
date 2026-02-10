@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-8">
+
+    <!-- Tajuk halaman -->
+    <div class="text-center">
+        <h1 class="text-3xl font-bold text-pink-600 mb-2">Ringkasan Perniagaan</h1>
+        <p class="text-gray-600">Lihat prestasi keseluruhan & bulanan</p>
+    </div>
+
+    <!-- Pilih Tahun -->
+    <div class="bg-white rounded-xl shadow-md p-6">
+        <form method="POST" class="flex flex-col md:flex-row items-center gap-4">
+            <label class="text-gray-700 font-medium">Pilih Tahun:</label>
+            <select name="tahun" class="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-400 focus:border-pink-400 outline-none">
+                {% for th in tahun_list %}
+                <option value="{{ th }}" {% if th == tahun %}selected{% endif %}>{{ th }}</option>
+                {% endfor %}
+            </select>
+            <button type="submit" class="bg-pink-600 text-white px-6 py-3 rounded-lg font-bold hover:bg-pink-700 transition">
+                Papar
+            </button>
+        </form>
+    </div>
+
+    <!-- Ringkasan Tahun -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="bg-white rounded-xl shadow-md p-6 text-center">
+            <h3 class="text-lg font-semibold text-pink-600 mb-2">Jumlah Tempahan (Tahun {{ tahun }})</h3>
+            <p class="text-4xl font-bold text-gray-800">{{ tahun_tempahan }}</p>
+        </div>
+        <div class="bg-white rounded-xl shadow-md p-6 text-center">
+            <h3 class="text-lg font-semibold text-pink-600 mb-2">Jumlah Hasil (Tahun {{ tahun }})</h3>
+            <p class="text-4xl font-bold text-pink-600">RM {{ tahun_hasil|round(2) }}</p>
+        </div>
+    </div>
+
+    <!-- Ringkasan Bulanan -->
+    <div class="bg-white rounded-xl shadow-md p-6">
+        <h2 class="text-xl font-bold text-pink-600 mb-4">Ringkasan Mengikut Bulan (Tahun {{ tahun }})</h2>
+        
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Bulan</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tempahan</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Qty MINI</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Qty MEDIUM</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hasil (RM)</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for data in bulanan_data %}
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ data.bulan }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ data.jumlah }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ data.qty_mini }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ data.qty_medium }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-pink-600">RM {{ data.hasil|round(2) }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
