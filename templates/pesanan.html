@@ -1,0 +1,231 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-8">
+
+    <!-- Tajuk halaman -->
+    <div class="text-center">
+        <h1 class="text-3xl font-bold text-pink-600 mb-2">Pesanan Baru</h1>
+        <p class="text-gray-600">Isi maklumat pelanggan & pesanan dengan lengkap</p>
+    </div>
+
+    <!-- Form Tambah Pesanan (dengan HTMX untuk auto refresh senarai) -->
+    <div class="bg-white rounded-xl shadow-md p-6">
+        <form method="POST"
+              hx-post="/pesanan"
+              hx-target="#pesanan-senarai"
+              hx-swap="innerHTML"
+              hx-indicator="#loading-indicator"
+              class="space-y-5" onsubmit="return validateForm()">
+
+            <!-- Loading indicator -->
+            <div id="loading-indicator" class="htmx-indicator text-center text-pink-600 font-medium py-2 hidden">
+                Sedang menyimpan pesanan... Mohon tunggu sebentar.
+            </div>
+
+            <!-- Maklumat Pelanggan -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div>
+                    <label class="block text-gray-700 font-medium mb-1">Nama Pelanggan <span class="text-red-500">*</span></label>
+                    <input type="text" name="nama" required placeholder="Nama penuh pelanggan" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-400 focus:border-pink-400 outline-none">
+                </div>
+                <div>
+                    <label class="block text-gray-700 font-medium mb-1">No Telefon <span class="text-red-500">*</span></label>
+                    <input type="tel" name="tel_no" required pattern="[0-9]{10,12}" title="Masukkan nombor telefon 10-12 digit tanpa - atau spasi" placeholder="Contoh: 0123456789" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-400 focus:border-pink-400 outline-none">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div>
+                    <label class="block text-gray-700 font-medium mb-1">Tarikh Event <span class="text-red-500">*</span></label>
+                    <input type="date" name="tarikh" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-400 focus:border-pink-400 outline-none">
+                </div>
+                <div>
+                    <label class="block text-gray-700 font-medium mb-1">Package <span class="text-red-500">*</span></label>
+                    <select name="package" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-400 focus:border-pink-400 outline-none" onchange="kiraTotal()">
+                        <option value="">Pilih Package</option>
+                        <option value="MINI">MINI (RM 0.60 / biji)</option>
+                        <option value="MEDIUM">MEDIUM (RM 1.00 / biji)</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Alamat Event -->
+            <div>
+                <label class="block text-gray-700 font-medium mb-1">Alamat Event <span class="text-red-500">*</span></label>
+                <textarea name="alamat" required rows="4" placeholder="Contoh: No 12, Jalan Bahagia 5, Taman Seri, 43000 Kajang, Selangor" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-400 focus:border-pink-400 outline-none"></textarea>
+            </div>
+
+            <!-- Butiran Pesanan -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div>
+                    <label class="block text-gray-700 font-medium mb-1">Bilangan (Qty) <span class="text-red-500">*</span></label>
+                    <input type="number" name="qty" min="1" required placeholder="Contoh: 100" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-400 focus:border-pink-400 outline-none" oninput="kiraTotal()">
+                </div>
+                <div>
+                    <label class="block text-gray-700 font-medium mb-1">Total Harga (RM)</label>
+                    <input type="text" name="total_price" readonly class="w-full p-3 border border-gray-300 rounded-lg bg-gray-100 font-medium" value="RM 0.00">
+                </div>
+            </div>
+
+            <!-- Bayaran -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+                <div>
+                    <label class="block text-gray-700 font-medium mb-1">Diskaun (RM)</label>
+                    <input type="number" name="discount" step="0.01" value="0" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-400 focus:border-pink-400 outline-none" oninput="kiraBalance()">
+                </div>
+                <div>
+                    <label class="block text-gray-700 font-medium mb-1">Kos Transport (RM)</label>
+                    <input type="number" name="transport" step="0.01" value="0" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-400 focus:border-pink-400 outline-none" oninput="kiraBalance()">
+                </div>
+                <div>
+                    <label class="block text-gray-700 font-medium mb-1">Deposit (RM)</label>
+                    <input type="number" name="deposit" step="0.01" value="0" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-400 focus:border-pink-400 outline-none" oninput="kiraBalance()">
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-gray-700 font-medium mb-1">Baki Bayaran (RM)</label>
+                <input type="text" name="balance" readonly class="w-full p-3 border border-gray-300 rounded-lg bg-gray-100 text-xl font-bold text-pink-600" value="RM 0.00">
+            </div>
+
+            <button type="submit" class="w-full bg-pink-600 text-white py-4 rounded-xl font-bold text-lg hover:bg-pink-700 transition">
+                Tambah Pesanan & Generate Resit PDF
+            </button>
+        </form>
+    </div>
+
+    <!-- Senarai Pesanan Terkini (dengan ID untuk HTMX target) -->
+    <div id="pesanan-senarai" class="bg-white rounded-xl shadow-md p-6">
+        <h2 class="text-xl font-bold text-pink-600 mb-4">Senarai Pesanan Terkini</h2>
+
+        {% if pesanan_list %}
+        <div class="overflow-x-auto max-h-96 overflow-y-auto border border-gray-200 rounded-lg">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50 sticky top-0 z-10">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Bil</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tarikh</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Package</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Qty</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Baki</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Resit</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tindakan</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for row in pesanan_list %}
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ row['bil_no'] }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ row['nama'] }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ row['tarikh'] }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ row['package'] }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ row['qty'] }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">RM {{ row['total_price']|round(2) }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-bold {% if row['balance'] > 0 %}text-red-600{% else %}text-green-600{% endif %}">
+                            RM {{ row['balance']|round(2) }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm">
+                            <span class="px-3 py-1 rounded-full text-xs font-medium {% if row['balance'] > 0 %}bg-red-100 text-red-800{% else %}bg-green-100 text-green-600{% endif %}">
+                                {{ 'Pending' if row['balance'] > 0 else 'Done' }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm space-x-2">
+                            {% if row['resit_path'] %}
+                            <a href="{{ url_for('view_resit', filename=row['resit_path']) }}" target="_blank" class="text-pink-600 hover:underline text-xs">
+                                View Resit Lama
+                            </a>
+                            {% endif %}
+                            <form method="POST" action="{{ url_for('regenerate_resit', bil_no=row['bil_no']) }}" style="display:inline;">
+                                <button type="submit" class="text-xs bg-purple-600 text-white px-3 py-1 rounded hover:bg-purple-700 transition">
+                                    Generate Resit Baru
+                                </button>
+                            </form>
+                        </td>
+                        <!-- Tindakan: Edit & Delete -->
+                        <td class="px-6 py-4 whitespace-nowrap text-sm space-x-2">
+                            <a href="{{ url_for('edit_pesanan', bil_no=row['bil_no']) }}" class="text-blue-600 hover:underline text-xs">
+                                Edit
+                            </a>
+                            <form method="POST" action="{{ url_for('delete_pesanan', bil_no=row['bil_no']) }}" style="display:inline;" onsubmit="return confirm('Anda pasti nak padam pesanan Bil {{ row['bil_no'] }} ini?');">
+                                <button type="submit" class="text-xs bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 transition">
+                                    Delete
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-center text-gray-500 py-8">Belum ada pesanan lagi.</p>
+        {% endif %}
+    </div>
+
+</div>
+
+<!-- JavaScript: auto kira + validation -->
+<script>
+function kiraTotal() {
+    const qty = parseInt(document.querySelector('[name="qty"]').value) || 0;
+    const package = document.querySelector('[name="package"]').value;
+    const harga = (package === 'MINI') ? 0.60 : (package === 'MEDIUM' ? 1.00 : 0);
+    const total = qty * harga;
+    document.querySelector('[name="total_price"]').value = 'RM ' + total.toFixed(2);
+    kiraBalance();
+}
+
+function kiraBalance() {
+    const totalStr = document.querySelector('[name="total_price"]').value.replace('RM ', '') || '0';
+    const total = parseFloat(totalStr) || 0;
+    const discount = parseFloat(document.querySelector('[name="discount"]').value) || 0;
+    const transport = parseFloat(document.querySelector('[name="transport"]').value) || 0;
+    const deposit = parseFloat(document.querySelector('[name="deposit"]').value) || 0;
+
+    const balance = total - discount + transport - deposit;
+    document.querySelector('[name="balance"]').value = 'RM ' + balance.toFixed(2);
+}
+
+function validateForm() {
+    const fields = {
+        nama: document.querySelector('[name="nama"]').value.trim(),
+        tel_no: document.querySelector('[name="tel_no"]').value.trim(),
+        tarikh: document.querySelector('[name="tarikh"]').value.trim(),
+        alamat: document.querySelector('[name="alamat"]').value.trim(),
+        package: document.querySelector('[name="package"]').value,
+        qty: parseInt(document.querySelector('[name="qty"]').value) || 0
+    };
+
+    for (let key in fields) {
+        if (!fields[key] || (key === 'qty' && fields[key] < 1)) {
+            alert("Sila isi SEMUA maklumat penting dengan lengkap!\n(Nama, Telefon, Tarikh, Alamat, Package, Qty minimum 1)");
+            return false;
+        }
+    }
+
+    if (!/^[0-9]{10,12}$/.test(fields.tel_no)) {
+        alert("No telefon mesti 10-12 digit tanpa - atau spasi!");
+        return false;
+    }
+
+    return true;
+}
+
+// Pasang event listener bila halaman load (penting untuk HTMX reload)
+document.addEventListener('DOMContentLoaded', function() {
+    const qtyInput = document.querySelector('[name="qty"]');
+    const packageSelect = document.querySelector('[name="package"]');
+
+    if (qtyInput && packageSelect) {
+        qtyInput.addEventListener('input', kiraTotal);
+        packageSelect.addEventListener('change', kiraTotal);
+        // Kira awal kalau ada nilai
+        kiraTotal();
+    }
+});
+</script>
+{% endblock %}

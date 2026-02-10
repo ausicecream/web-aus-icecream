@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ms" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>{{ title }} | AUS Ice Cream Catering</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- HTMX untuk interaksi tanpa reload halaman -->
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    
+    <!-- Custom CSS kalau nak override -->
+    <link rel="stylesheet" href="/static/css/style.css">
+    
+    <!-- Favicon kalau ada -->
+    <link rel="icon" href="/static/images/auslogo.png">
+</head>
+<body class="bg-gray-50 min-h-screen flex flex-col font-sans">
+
+    <!-- Header / App Bar -->
+    <header class="bg-pink-600 text-white shadow-md">
+        <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <img src="/static/images/2.png" alt="Logo" class="h-20 w-20 rounded-full">
+                <h1 class="text-xl font-bold">AUS Ice Cream Catering</h1>
+            </div>
+        </div>
+    </header>
+
+    <!-- Kandungan utama -->
+    <main class="flex-grow container max-w-6xl mx-auto px-4 py-6">
+        {% block content %}
+        <!-- Isi halaman khusus akan masuk sini -->
+        {% endblock %}
+    </main>
+
+    <!-- Navigation Bar Bawah (fixed) -->
+    <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-50">
+        <div class="max-w-6xl mx-auto">
+            <div class="flex justify-around items-center py-2">
+                
+                <a href="/" class="flex flex-col items-center text-gray-600 hover:text-pink-600 transition-colors {% if request.path == '/' %}text-pink-600{% endif %}">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                    </svg>
+                    <span class="text-xs mt-1">Home</span>
+                </a>
+
+                <a href="/pesanan" class="flex flex-col items-center text-gray-600 hover:text-pink-600 transition-colors {% if request.path == '/pesanan' %}text-pink-600{% endif %}">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h18l-2 12H5L3 3z" />
+                    </svg>
+                    <span class="text-xs mt-1">Pesanan</span>
+                </a>
+
+                <a href="/stock" class="flex flex-col items-center text-gray-600 hover:text-pink-600 transition-colors {% if request.path == '/stock' %}text-pink-600{% endif %}">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                    </svg>
+                    <span class="text-xs mt-1">Stock</span>
+                </a>
+
+                <a href="/summary" class="flex flex-col items-center text-gray-600 hover:text-pink-600 transition-colors {% if request.path == '/summary' %}text-pink-600{% endif %}">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    </svg>
+                    <span class="text-xs mt-1">Summary</span>
+                </a>
+
+            </div>
+        </div>
+    </nav>
+
+</body>
+</html>

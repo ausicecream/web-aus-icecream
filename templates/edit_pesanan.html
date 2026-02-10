@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-8">
+    <div class="text-center">
+        <h1 class="text-3xl font-bold text-pink-600 mb-2">Edit Pesanan Bil {{ pesanan['bil_no'] }}</h1>
+        <p class="text-gray-600">Ubah maklumat yang perlu</p>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-md p-6">
+        <form method="POST" class="space-y-5" onsubmit="return validateEditForm()">
+
+            <!-- Maklumat Pelanggan -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div>
+                    <label class="block text-gray-700 font-medium mb-1">Nama Pelanggan <span class="text-red-500">*</span></label>
+                    <input type="text" name="nama" value="{{ pesanan['nama'] }}" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-400 focus:border-pink-400 outline-none">
+                </div>
+                <div>
+                    <label class="block text-gray-700 font-medium mb-1">No Telefon <span class="text-red-500">*</span></label>
+                    <input type="tel" name="tel_no" value="{{ pesanan['tel_no'] }}" required pattern="[0-9]{10,12}" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-400 focus:border-pink-400 outline-none">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div>
+                    <label class="block text-gray-700 font-medium mb-1">Tarikh Event <span class="text-red-500">*</span></label>
+                    <input type="date" name="tarikh" value="{{ pesanan['tarikh'] }}" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-400 focus:border-pink-400 outline-none">
+                </div>
+                <div>
+                    <label class="block text-gray-700 font-medium mb-1">Package <span class="text-red-500">*</span></label>
+                    <select name="package" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-400 focus:border-pink-400 outline-none" onchange="kiraTotalEdit()">
+                        <option value="MINI" {% if pesanan['package'] == 'MINI' %}selected{% endif %}>MINI (RM 0.60 / biji)</option>
+                        <option value="MEDIUM" {% if pesanan['package'] == 'MEDIUM' %}selected{% endif %}>MEDIUM (RM 1.00 / biji)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-gray-700 font-medium mb-1">Alamat Event <span class="text-red-500">*</span></label>
+                <textarea name="alamat" required rows="4" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-400 focus:border-pink-400 outline-none">{{ pesanan['alamat'] }}</textarea>
+            </div>
+
+            <!-- Butiran Pesanan -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div>
+                    <label class="block text-gray-700 font-medium mb-1">Bilangan (Qty) <span class="text-red-500">*</span></label>
+                    <input type="number" name="qty" value="{{ pesanan['qty'] }}" min="1" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-400 focus:border-pink-400 outline-none" oninput="kiraTotalEdit()">
+                </div>
+                <div>
+                    <label class="block text-gray-700 font-medium mb-1">Total Harga (RM)</label>
+                    <input type="text" name="total_price" readonly value="RM {{ pesanan['total_price']|round(2) }}" class="w-full p-3 border border-gray-300 rounded-lg bg-gray-100 font-medium">
+                </div>
+            </div>
+
+            <!-- Bayaran -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+                <div>
+                    <label class="block text-gray-700 font-medium mb-1">Diskaun (RM)</label>
+                    <input type="number" name="discount" value="{{ pesanan['discount'] }}" step="0.01" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-400 focus:border-pink-400 outline-none" oninput="kiraBalanceEdit()">
+                </div>
+                <div>
+                    <label class="block text-gray-700 font-medium mb-1">Kos Transport (RM)</label>
+                    <input type="number" name="transport" value="{{ pesanan['transport'] }}" step="0.01" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-400 focus:border-pink-400 outline-none" oninput="kiraBalanceEdit()">
+                </div>
+                <div>
+                    <label class="block text-gray-700 font-medium mb-1">Deposit (RM)</label>
+                    <input type="number" name="deposit" value="{{ pesanan['deposit'] }}" step="0.01" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-400 focus:border-pink-400 outline-none" oninput="kiraBalanceEdit()">
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-gray-700 font-medium mb-1">Baki Bayaran (RM)</label>
+                <input type="text" name="balance" readonly value="RM {{ pesanan['balance']|round(2) }}" class="w-full p-3 border border-gray-300 rounded-lg bg-gray-100 text-xl font-bold text-pink-600">
+            </div>
+
+            <div class="flex space-x-4">
+                <button type="submit" class="flex-1 bg-blue-600 text-white py-4 rounded-xl font-bold hover:bg-blue-700 transition">
+                    Simpan Perubahan
+                </button>
+                <a href="{{ url_for('pesanan') }}" class="flex-1 bg-gray-500 text-white py-4 rounded-xl font-bold text-center hover:bg-gray-600 transition">
+                    Batal
+                </a>
+            </div>
+        </form>
+    </div>
+
+</div>
+
+<!-- JavaScript untuk auto kira dalam form edit -->
+<script>
+function kiraTotalEdit() {
+    const qty = parseInt(document.querySelector('[name="qty"]').value) || 0;
+    const package = document.querySelector('[name="package"]').value;
+    const harga = (package === 'MINI') ? 0.60 : (package === 'MEDIUM' ? 1.00 : 0);
+    const total = qty * harga;
+    document.querySelector('[name="total_price"]').value = 'RM ' + total.toFixed(2);
+    kiraBalanceEdit();
+}
+
+function kiraBalanceEdit() {
+    const totalStr = document.querySelector('[name="total_price"]').value.replace('RM ', '') || '0';
+    const total = parseFloat(totalStr) || 0;
+    const discount = parseFloat(document.querySelector('[name="discount"]').value) || 0;
+    const transport = parseFloat(document.querySelector('[name="transport"]').value) || 0;
+    const deposit = parseFloat(document.querySelector('[name="deposit"]').value) || 0;
+
+    const balance = total - discount + transport - deposit;
+    document.querySelector('[name="balance"]').value = 'RM ' + balance.toFixed(2);
+}
+
+// Pasang event listener untuk form edit
+document.addEventListener('DOMContentLoaded', function() {
+    const qtyInput = document.querySelector('[name="qty"]');
+    const packageSelect = document.querySelector('[name="package"]');
+
+    if (qtyInput && packageSelect) {
+        qtyInput.addEventListener('input', kiraTotalEdit);
+        packageSelect.addEventListener('change', kiraTotalEdit);
+        // Kira awal
+        kiraTotalEdit();
+    }
+});
+
+function validateEditForm() {
+    // Sama seperti validateForm, tapi untuk edit
+    const qty = parseInt(document.querySelector('[name="qty"]').value) || 0;
+    if (qty < 1) {
+        alert("Bilangan (Qty) minimum 1!");
+        return false;
+    }
+    return true;
+}
+</script>
+{% endblock %}

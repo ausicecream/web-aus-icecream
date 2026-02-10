@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="space-y-6">
+
+    <!-- Hero / Selamat Datang -->
+    <div class="bg-white rounded-xl shadow-md p-6 text-center">
+        <h2 class="text-2xl font-bold text-pink-600 mb-2">Selamat Datang ke AUS Ice Cream Catering 🍦</h2>
+        <p class="text-gray-600">Sistem Pengurusan Pesanan & Stok Aiskrim</p>
+    </div>
+
+    <!-- Kad Ringkasan -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="bg-white rounded-xl shadow-md p-6">
+            <h3 class="text-lg font-semibold text-pink-600 mb-2">Total Hasil</h3>
+            <p class="text-3xl font-bold">RM {{ total_hasil|round(2) }}</p>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-md p-6">
+            <h3 class="text-lg font-semibold text-pink-600 mb-2">Tempahan Hari Ini</h3>
+            <p class="text-3xl font-bold">{{ today_orders }}</p>
+        </div>
+    </div>
+
+    <!-- Stok Rendah -->
+    {% if stok_rendah %}
+    <div class="bg-red-50 border-l-4 border-red-500 p-6 rounded-xl">
+        <h3 class="text-lg font-semibold text-red-700 mb-2">Stok Rendah!</h3>
+        <p class="text-red-600">{{ stok_rendah|join(', ') }}</p>
+    </div>
+    {% endif %}
+
+	<!--Event Alerts -->
+	{% if event_alerts %}
+    <div class="bg-yellow-50 border-l-4 border-yellow-500 p-6 rounded-xl">
+        <h3 class="text-lg font-semibold text-yellow-800 mb-3">Pemberitahuan Event Akan Datang</h3>
+        <ul class="space-y-3">
+            {% for event in event_alerts %}
+            <li class="text-gray-800">
+                <strong>Bil {{ event.bil_no }}</strong> – {{ event.nama }} ({{ event.package }})
+                <br>
+                Tarikh: {{ event.tarikh }} • <span class="font-medium">Tinggal {{ event.days_left }} hari</span>
+                • Status: <span class="{% if event.status == 'Pending' %}text-red-600{% else %}text-green-600{% endif %} font-bold">{{ event.status }}</span>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% else %}
+    <p class="text-center text-gray-500">Tiada event dalam 5 hari akan datang.</p>
+    {% endif %}
+</div>
+{% endblock %}
