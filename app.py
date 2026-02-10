@@ -6,10 +6,78 @@ import os
 from datetime import datetime, timedelta
 from collections import defaultdict
 from flask import send_from_directory
+from flask import Flask, render_template, request, redirect, url_for, flash, session
+from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
+
+
 
 
 app = Flask(__name__)
+app.secret_key = 'wyh_7237'
 
+# Setup Flask-Login
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'login'
+
+# User class simple (single user)
+class User(UserMixin):
+    def __init__(self, id):
+        self.id = id
+
+# User tetap (hardcode dulu)
+DUMMY_USER = {'username': 'admin', 'password': 'ausicecream123'}
+
+@login_manager.user_loader
+def load_user(user_id):
+    if user_id == '1':
+        return User('1')
+    return None
+
+# Route login
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+
+        if username == DUMMY_USER['username'] and password == DUMMY_USER['password']:
+            user = User('1')
+            login_user(user)
+            flash('Login berjaya!', 'success')
+            return redirect(url_for('home'))
+        else:
+            flash('Username atau password salah!', 'danger')
+
+    return render_template('login.html')
+
+# Route logout
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    flash('Anda telah log keluar.', 'info')
+    return redirect(url_for('login'))
+
+# Lindungi semua route penting
+@app.route('/')
+@login_required
+def home():
+    # ... kod home awak kekal sama
+    pass
+
+@app.route('/pesanan', methods=['GET', 'POST'])
+@login_required
+def pesanan():
+    # ... kod pesanan awak kekal sama
+    pass
+
+@app.route('/stock', methods=['GET', 'POST'])
+@login_required
+def stock():
+    # ... kod stock awak kekal sama
+    pass	
+	
 # Path database
 DB_PATH = 'aus.db'
 RESIT_PATH = 'resit'
