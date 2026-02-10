@@ -132,9 +132,11 @@ def init_db():
 init_db()  # Jalankan sekali
 
 @app.route('/')
-def home():
-    conn = get_db()
-    c = conn.cursor()
+def get_db():
+    conn = sqlite3.connect('aus.db')
+    conn.row_factory = sqlite3.Row
+    init_db()  # panggil sini kalau nak pastikan table wujud
+    return conn
 
     # Total hasil
     c.execute("SELECT SUM(total_price - discount + transport) FROM pesanan")
