@@ -288,17 +288,71 @@ def stock():
     return render_template('stock.html', perisa=perisa, cone=cone, title="Stok")
 
 # Route Summary
-@app.route('/summary')
+@app.route('/summary', methods=['GET', 'POST'])
 @login_required
 def summary():
     conn = get_db()
     c = conn.cursor()
-    c.execute("SELECT COUNT(*), SUM(total_price - discount + transport) FROM pesanan")
-    total_pesanan, total_hasil = c.fetchone()
-    total_hasil = total_hasil or 0.0
-    conn.close()
-    return render_template('summary.html', total_pesanan=total_pesanan, total_hasil=round(total_hasil, 2), title="Summary")
 
+    # Tahun pilihan (default tahun sekarang)
+    tahun = request.form.get('tahun', type=int) or datetime.now().year
+    tahun_list = list(range(tahun - 5, tahun + 6))  # 5 tahun sebelum & selepas
+
+    # Jumlah tempahan & hasil tahun pilihan
+    c.execute("""
+        SELECT COUNT(*), COALESCE(SUM(total_price - discount + transport - deposit), 0)
+        FROM pesanan
+        WHERE strftime('%Y', tarikh) = ?
+    """, (str(tahun),))
+    tahun_tempahan, tahun_hasil = c.fetchone()
+    tahun_tempahan = tahun_tempahan or 0
+    tahun_hasil = tahun_hasil or 0.0
+
+    # Pesanan pending (balance > 0)
+    c.execute("SELECT COUNT(*) FROM pesanan WHERE balance > 0")
+    pesanan_pending = c.fetchone()[0] or 0
+
+    # Stok rendah (balance < 2)
+    c.execute("SELECT COUNT(*) FROM stock_perisa WHERE balance < 2")
+    perisa_rendah = c.fetchone()[0] or 0
+    c.execute("SELECT COUNT(*) FROM stock_cone WHERE balance < 2")
+    cone_rendah = c.fetchone()[0] or 0
+    stok_rendah = perisa_rendah + cone_rendah
+
+    # Ringkasan bulanan
+    bulan_nama = ["Januari", "Februari", "Mac", "April", "Mei", "Jun", 
+                  "Julai", "Ogos", "September", "Oktober", "November", "Disember"]
+    bulanan_data = []
+    for bulan in range(1, 13):
+        c.execute("""
+            SELECT COUNT(*),
+                   SUM(CASE WHEN package = 'MINI' THEN qty ELSE 0 END),
+                   SUM(CASE WHEN package = 'MEDIUM' THEN qty ELSE 0 END),
+                   COALESCE(SUM(total_price - discount + transport - deposit), 0)
+            FROM pesanan
+            WHERE strftime('%Y', tarikh) = ? AND strftime('%m', tarikh) = ?
+        """, (str(tahun), f"{bulan:02d}"))
+        result = c.fetchone()
+        bulanan_data.append({
+            'bulan': bulan_nama[bulan-1],
+            'jumlah': result[0] or 0,
+            'qty_mini': result[1] or 0,
+            'qty_medium': result[2] or 0,
+            'hasil': result[3] or 0.0
+        })
+
+    conn.close()
+
+    return render_template('summary.html',
+                           tahun=tahun,
+                           tahun_list=tahun_list,
+                           tahun_tempahan=tahun_tempahan,
+                           tahun_hasil=round(tahun_hasil, 2),
+                           pesanan_pending=pesanan_pending,
+                           stok_rendah=stok_rendah,
+                           bulanan_data=bulanan_data,
+                           title="Summary")
+						   
 # Route View Resit
 @app.route('/resit/<filename>')
 @login_required
