@@ -10,7 +10,9 @@ from flask import Flask, render_template, request, redirect, url_for, flash, ses
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 
 
-
+@app.route('/')
+def index():
+    return redirect(url_for('pesanan'))  # redirect terus ke halaman pesanan
 
 app = Flask(__name__)
 app.secret_key = 'wyh_7237'
