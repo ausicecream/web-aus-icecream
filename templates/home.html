@@ -6,11 +6,25 @@
     <!-- Hero / Selamat Datang -->
     <div class="bg-white rounded-xl shadow-md p-6 text-center">
         <h2 class="text-2xl md:text-3xl font-bold text-pink-600 mb-2">
-            Selamat Datang ke AUS Ice Cream Catering ??
+            Selamat Datang ke AUS Ice Cream Catering
         </h2>
         <p class="text-gray-600">Sistem Pengurusan Pesanan & Stok Aiskrim</p>
     </div>
 
+    <!-- Pilih Tahun -->
+    <div class="bg-white rounded-xl shadow-md p-6">
+        <form method="POST" class="flex flex-col md:flex-row items-center gap-4 justify-center">
+            <label class="text-gray-700 font-medium text-lg">Pilih Tahun:</label>
+            <select name="tahun" class="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-400 outline-none w-40 text-center">
+                {% for th in tahun_list %}
+                <option value="{{ th }}" {% if th == tahun %}selected{% endif %}>{{ th }}</option>
+                {% endfor %}
+            </select>
+            <button type="submit" class="bg-pink-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-pink-700 transition">
+                Papar
+            </button>
+        </form>
+    </div>
 
     <!-- Kad Ringkasan -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -47,19 +61,25 @@
     {% if event_alerts %}
     <div class="bg-yellow-50 border-l-4 border-yellow-500 p-6 rounded-xl">
         <h3 class="text-lg font-semibold text-yellow-800 mb-3">Pemberitahuan Event Akan Datang</h3>
-        <ul class="space-y-3">
+        <ul class="space-y-4">
             {% for event in event_alerts %}
-            <li class="text-gray-800">
-                <strong>Bil {{ event.bil_no }}</strong> – {{ event.nama }} ({{ event.package }})
+            <li class="text-gray-800 bg-white p-4 rounded-lg shadow-sm">
+                <strong class="text-pink-600">Bil {{ event.bil_no }}</strong> - {{ event.nama }} ({{ event.package }})
                 <br>
-                Tarikh: {{ event.tarikh }} • <span class="font-medium">Tinggal {{ event.days_left }} hari</span>
-                • Status: <span class="{% if event.status == 'Pending' %}text-red-600{% else %}text-green-600{% endif %} font-bold">{{ event.status }}</span>
+                <span class="font-medium">Tarikh: {{ event.tarikh }}</span> 
+                • <span class="font-medium">Tinggal {{ event.days_left }} hari</span>
+                • Status: 
+                <span class="{% if event.status == 'Pending' %}text-red-600 font-bold{% else %}text-green-600 font-bold{% endif %}">
+                    {{ event.status }}
+                </span>
             </li>
             {% endfor %}
         </ul>
     </div>
     {% else %}
-    <p class="text-center text-gray-500">Tiada event dalam 5 hari akan datang.</p>
+    <div class="bg-green-50 border-l-4 border-green-500 p-6 rounded-xl text-center">
+        <p class="text-green-700 font-medium">Tiada event dalam 5 hari akan datang. Semua pesanan terkawal! </p>
+    </div>
     {% endif %}
 
 </div>
