@@ -11,20 +11,6 @@
         <p class="text-gray-600">Sistem Pengurusan Pesanan & Stok Aiskrim</p>
     </div>
 
-    <!-- Pilih Tahun (untuk ringkasan bulanan) -->
-    <div class="bg-white rounded-xl shadow-md p-6">
-        <form method="POST" class="flex flex-col md:flex-row items-center gap-4 justify-center">
-            <label class="text-gray-700 font-medium text-lg">Pilih Tahun:</label>
-            <select name="tahun" class="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-400 outline-none w-40 text-center">
-                {% for th in tahun_list %}
-                <option value="{{ th }}" {% if th == tahun %}selected{% endif %}>{{ th }}</option>
-                {% endfor %}
-            </select>
-            <button type="submit" class="bg-pink-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-pink-700 transition">
-                Papar
-            </button>
-        </form>
-    </div>
 
     <!-- Kad Ringkasan -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
