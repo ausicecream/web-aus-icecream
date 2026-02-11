@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, send_file, redirect, url_for, flash
+from flask import Flask, render_template, request, send_file, redirect, url_for, flash, send_from_directory
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from io import BytesIO
 from fpdf import FPDF
@@ -72,7 +72,7 @@ def get_db():
     conn.row_factory = sqlite3.Row
     return conn
 
-# Setup DB (jalan sekali je bila pertama kali)
+# Setup DB (jalan sekali je)
 def init_db():
     conn = get_db()
     c = conn.cursor()
@@ -83,7 +83,7 @@ def init_db():
                   nama TEXT, tel_no TEXT, tarikh TEXT, alamat TEXT,
                   package TEXT, qty INTEGER, total_price REAL, discount REAL, 
                   transport REAL, deposit REAL, balance REAL,
-                  resit_path TEXT)''')  # resit_path dah ada dari awal
+                  resit_path TEXT)''')
 
     # Table stock perisa & cone
     c.execute('''CREATE TABLE IF NOT EXISTS stock_perisa
@@ -103,10 +103,9 @@ def init_db():
     conn.close()
     print("Database aus.db disemak dan diinisialisasi.")
 
-# Panggil init_db sekali sahaja (bukan global)
 init_db()
 
-# Route Pesanan (satu sahaja, dengan @login_required)
+# Route Pesanan
 @app.route('/pesanan', methods=['GET', 'POST'])
 @login_required
 def pesanan():
@@ -250,7 +249,7 @@ def pesanan():
 
     return render_template('pesanan.html', pesanan_list=pesanan_list, title="Pesanan")
 
-# Route lain (contoh mark_done, stock, dll) kekal sama, pastikan ada @login_required
+# Route Mark as Done
 @app.route('/mark_done/<int:bil_no>', methods=['POST'])
 @login_required
 def mark_done(bil_no):
@@ -261,7 +260,253 @@ def mark_done(bil_no):
     conn.close()
     return redirect(url_for('pesanan'))
 
-# ... (sambung kod route lain awak seperti stock, summary, regenerate_resit, delete, edit, view_resit)
+# Route Stock
+@app.route('/stock', methods=['GET', 'POST'])
+@login_required
+def stock():
+    conn = get_db()
+    c = conn.cursor()
+
+    if request.method == 'POST':
+        item_type = request.form.get('item_type')
+        item = request.form.get('item')
+        in_qty = int(request.form.get('in_qty') or 0)
+        out_qty = int(request.form.get('out_qty') or 0)
+
+        table = 'stock_perisa' if item_type == 'perisa' else 'stock_cone'
+        column = 'perisa' if item_type == 'perisa' else 'cone'
+
+        c.execute(f"UPDATE {table} SET in_qty = in_qty + ?, out_qty = out_qty + ?, balance = balance + ? - ? WHERE {column} = ?",
+                  (in_qty, out_qty, in_qty, out_qty, item))
+        conn.commit()
+
+    c.execute("SELECT * FROM stock_perisa")
+    perisa = c.fetchall()
+
+    c.execute("SELECT * FROM stock_cone")
+    cone = c.fetchall()
+
+    conn.close()
+
+    return render_template('stock.html', perisa=perisa, cone=cone, title="Stok")
+
+# Route Summary (contoh ringkas)
+@app.route('/summary')
+@login_required
+def summary():
+    conn = get_db()
+    c = conn.cursor()
+    c.execute("SELECT COUNT(*), SUM(total_price - discount + transport) FROM pesanan")
+    total_pesanan, total_hasil = c.fetchone()
+    total_hasil = total_hasil or 0.0
+    conn.close()
+    return render_template('summary.html', total_pesanan=total_pesanan, total_hasil=round(total_hasil, 2), title="Summary")
+
+# Route View Resit
+@app.route('/resit/<filename>')
+@login_required
+def view_resit(filename):
+    return send_from_directory(RESIT_PATH, filename)
+
+# Route Delete Pesanan
+@app.route('/delete_pesanan/<int:bil_no>', methods=['POST'])
+@login_required
+def delete_pesanan(bil_no):
+    conn = get_db()
+    c = conn.cursor()
+    c.execute("DELETE FROM pesanan WHERE bil_no = ?", (bil_no,))
+    conn.commit()
+    conn.close()
+    return redirect(url_for('pesanan'))
+
+# Route Edit Pesanan
+@app.route('/edit_pesanan/<int:bil_no>', methods=['GET', 'POST'])
+@login_required
+def edit_pesanan(bil_no):
+    conn = get_db()
+    c = conn.cursor()
+
+    if request.method == 'POST':
+        nama = request.form.get('nama')
+        tel_no = request.form.get('tel_no')
+        tarikh = request.form.get('tarikh')
+        alamat = request.form.get('alamat')
+        package = request.form.get('package')
+        qty = int(request.form.get('qty') or 0)
+        discount = float(request.form.get('discount') or 0)
+        transport = float(request.form.get('transport') or 0)
+        deposit = float(request.form.get('deposit') or 0)
+
+        harga_unit = 0.60 if package == 'MINI' else 1.00
+        total_price = qty * harga_unit
+        balance = total_price - discount + transport - deposit
+
+        c.execute('''
+            UPDATE pesanan SET
+                nama = ?, tel_no = ?, tarikh = ?, alamat = ?, package = ?, qty = ?,
+                total_price = ?, discount = ?, transport = ?, deposit = ?, balance = ?
+            WHERE bil_no = ?
+        ''', (nama, tel_no, tarikh, alamat, package, qty, total_price, discount, transport, deposit, balance, bil_no))
+        
+        conn.commit()
+        conn.close()
+        return redirect(url_for('pesanan'))
+
+    # GET: ambil data lama
+    c.execute("SELECT * FROM pesanan WHERE bil_no = ?", (bil_no,))
+    pesanan = c.fetchone()
+    conn.close()
+
+    if pesanan is None:
+        return "Pesanan tidak dijumpai", 404
+
+    return render_template('edit_pesanan.html', pesanan=pesanan)
+
+# Route Delete Perisa
+@app.route('/delete_perisa/<string:perisa>', methods=['POST'])
+@login_required
+def delete_perisa(perisa):
+    conn = get_db()
+    c = conn.cursor()
+    c.execute("DELETE FROM stock_perisa WHERE perisa = ?", (perisa,))
+    conn.commit()
+    conn.close()
+    return redirect(url_for('stock'))
+
+# Route Delete Cone
+@app.route('/delete_cone/<string:cone>', methods=['POST'])
+@login_required
+def delete_cone(cone):
+    conn = get_db()
+    c = conn.cursor()
+    c.execute("DELETE FROM stock_cone WHERE cone = ?", (cone,))
+    conn.commit()
+    conn.close()
+    return redirect(url_for('stock'))
+
+# Route Regenerate Resit
+@app.route('/regenerate_resit/<int:bil_no>', methods=['POST'])
+@login_required
+def regenerate_resit(bil_no):
+    conn = get_db()
+    c = conn.cursor()
+
+    c.execute("SELECT nama, tel_no, tarikh, alamat, package, qty, discount, transport, deposit, balance FROM pesanan WHERE bil_no = ?", (bil_no,))
+    data = c.fetchone()
+
+    if not data:
+        conn.close()
+        return "Pesanan tidak dijumpai", 404
+
+    nama, tel_no, tarikh, alamat, package, qty, discount, transport, deposit, balance = data
+    harga_unit = 0.60 if package == 'MINI' else 1.00
+    total_price = qty * harga_unit
+
+    pdf = FPDF(orientation='P', unit='mm', format='A4')
+    pdf.add_page()
+
+    try:
+        pdf.image('static/images/auslogo.png', x=10, y=5, w=25)
+    except Exception as e:
+        print("Logo tidak dijumpai:", e)
+
+    pdf.set_font("Helvetica", "B", 15)
+    pdf.cell(0, 8, txt="AUS ICE CREAM CATERING", ln=1, align="C")
+    pdf.set_font("Helvetica", "B", 11)
+    pdf.cell(0, 6, txt="Resit Pesanan Rasmi", ln=1, align="C")
+    pdf.set_font("Helvetica", "", 9)
+    pdf.cell(0, 5, txt=f"Bil No: {bil_no} | Tarikh: {datetime.now().strftime('%d/%m/%Y %H:%M')}", ln=1, align="C")
+    pdf.ln(3)
+
+    pdf.set_draw_color(255, 105, 180)
+    pdf.set_line_width(0.4)
+    pdf.line(10, pdf.get_y(), 200, pdf.get_y())
+    pdf.ln(4)
+
+    pdf.set_font("Helvetica", "B", 10)
+    pdf.cell(0, 6, txt="MAKLUMAT PELANGGAN", ln=1)
+    pdf.set_font("Helvetica", "", 9)
+
+    pdf.cell(40, 6, txt="Nama Pelanggan:", border=0)
+    pdf.cell(150, 6, txt=nama or "-", border=0, ln=1)
+
+    pdf.cell(40, 6, txt="No Telefon:", border=0)
+    pdf.cell(150, 6, txt=tel_no or "-", border=0, ln=1)
+
+    pdf.cell(40, 6, txt="Tarikh Event:", border=0)
+    pdf.cell(150, 6, txt=tarikh or "-", border=0, ln=1)
+
+    pdf.cell(40, 6, txt="Alamat Event:", border=0)
+    pdf.multi_cell(150, 6, txt=alamat or "-", border=0)
+    pdf.ln(3)
+
+    pdf.set_font("Helvetica", "B", 10)
+    pdf.cell(0, 6, txt="BUTIRAN PESANAN", ln=1)
+    pdf.set_font("Helvetica", "", 9)
+    pdf.set_fill_color(245, 245, 245)
+    pdf.cell(55, 7, txt="Package", border=1, fill=True)
+    pdf.cell(25, 7, txt="Qty", border=1, fill=True)
+    pdf.cell(45, 7, txt="Harga Unit", border=1, fill=True)
+    pdf.cell(45, 7, txt="Jumlah", border=1, ln=1, fill=True)
+
+    pdf.cell(55, 7, txt=package, border=1)
+    pdf.cell(25, 7, txt=str(qty), border=1, align="C")
+    pdf.cell(45, 7, txt=f"RM{harga_unit:.2f}", border=1, align="R")
+    pdf.cell(45, 7, txt=f"RM{total_price:.2f}", border=1, ln=1, align="R")
+    pdf.ln(5)
+
+    pdf.set_font("Helvetica", "B", 10)
+    pdf.cell(130, 8, txt="JUMLAH BAYARAN", border=0)
+    pdf.cell(60, 8, txt=f"RM{total_price:.2f}", border=0, ln=1, align="R")
+
+    pdf.set_font("Helvetica", "", 9)
+    pdf.cell(130, 6, txt="Diskaun", border=0)
+    pdf.cell(60, 6, txt=f"- RM{discount:.2f}", border=0, ln=1, align="R")
+    pdf.cell(130, 6, txt="Kos Transport", border=0)
+    pdf.cell(60, 6, txt=f"+ RM{transport:.2f}", border=0, ln=1, align="R")
+    pdf.cell(130, 6, txt="Deposit", border=0)
+    pdf.cell(60, 6, txt=f"- RM{deposit:.2f}", border=0, ln=1, align="R")
+
+    pdf.set_font("Helvetica", "B", 11)
+    pdf.set_text_color(236, 64, 122)
+    pdf.cell(130, 10, txt="BAKI BAYARAN", border=0)
+    pdf.cell(60, 10, txt=f"RM{balance:.2f}", border=0, ln=1, align="R")
+
+    pdf.ln(8)
+    pdf.set_font("Helvetica", "I", 8)
+    pdf.set_text_color(0, 0, 0)
+    pdf.multi_cell(0, 5, txt="Terima kasih atas tempahan anda! Baki bayaran hendaklah dijelaskan 3 hari sebelum majlis.")
+    pdf.multi_cell(0, 5, txt="Hubungi kami: 011-15371071 / 014-4007237")
+    pdf.ln(3)
+
+    pdf.set_font("Helvetica", "B", 9)
+    pdf.set_text_color(236, 64, 122)
+    pdf.cell(0, 6, txt="Maklumat Pembayaran", ln=1)
+    pdf.set_font("Helvetica", "", 9)
+    pdf.set_text_color(0, 0, 0)
+    pdf.cell(0, 5, txt="Maybank Acc No: 151520082883", ln=1)
+    pdf.cell(0, 5, txt="NORMI IDAYU BINTI YUNOS", ln=1)
+
+    pdf_output = BytesIO()
+    pdf.output(pdf_output)
+    pdf_output.seek(0)
+
+    resit_filename = f"Resit_Bil{bil_no}_{datetime.now().strftime('%Y%m%d_%H%M%S')}_revised.pdf"
+    resit_filepath = os.path.join(RESIT_PATH, resit_filename)
+    with open(resit_filepath, 'wb') as f:
+        f.write(pdf_output.getvalue())
+
+    c.execute("UPDATE pesanan SET resit_path = ? WHERE bil_no = ?", (resit_filename, bil_no))
+    conn.commit()
+    conn.close()
+
+    pdf_output.seek(0)
+    return send_file(
+        pdf_output,
+        as_attachment=True,
+        download_name=resit_filename,
+        mimetype='application/pdf'
+    )
 
 if __name__ == '__main__':
     app.run(debug=True)
