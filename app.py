@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 from collections import defaultdict
 
 app = Flask(__name__)
-app.secret_key = 'wyh_7237_rahsia'  # Tukar ke string random panjang kalau nak lebih selamat
+app.secret_key = 'wyh_7237_rahsia'  # Tukar kalau nak lebih selamat
 
 # Setup Flask-Login
 login_manager = LoginManager()
@@ -20,7 +20,7 @@ class User(UserMixin):
     def __init__(self, id):
         self.id = id
 
-# User tetap (hardcode dulu)
+# User tetap (hardcode)
 DUMMY_USER = {'username': 'admin', 'password': 'ausicecream123'}
 
 @login_manager.user_loader
@@ -72,12 +72,11 @@ def get_db():
     conn.row_factory = sqlite3.Row
     return conn
 
-# Setup DB (jalan sekali je)
+# Setup DB (jalan sekali)
 def init_db():
     conn = get_db()
     c = conn.cursor()
 
-    # Table pesanan
     c.execute('''CREATE TABLE IF NOT EXISTS pesanan
                  (bil_no INTEGER PRIMARY KEY AUTOINCREMENT, 
                   nama TEXT, tel_no TEXT, tarikh TEXT, alamat TEXT,
@@ -85,13 +84,11 @@ def init_db():
                   transport REAL, deposit REAL, balance REAL,
                   resit_path TEXT)''')
 
-    # Table stock perisa & cone
     c.execute('''CREATE TABLE IF NOT EXISTS stock_perisa
                  (perisa TEXT PRIMARY KEY, in_qty INTEGER DEFAULT 0, out_qty INTEGER DEFAULT 0, balance INTEGER DEFAULT 0)''')
     c.execute('''CREATE TABLE IF NOT EXISTS stock_cone
                  (cone TEXT PRIMARY KEY, in_qty INTEGER DEFAULT 0, out_qty INTEGER DEFAULT 0, balance INTEGER DEFAULT 0)''')
 
-    # Default stock
     perisa_list = ['COKELAT', 'OREO', 'STRAWBAREY', 'JAGUNG', 'KELADI']
     cone_list = ['MINI', 'MEDIUM', 'DOUBLE']
     for p in perisa_list:
@@ -290,7 +287,7 @@ def stock():
 
     return render_template('stock.html', perisa=perisa, cone=cone, title="Stok")
 
-# Route Summary (contoh ringkas)
+# Route Summary
 @app.route('/summary')
 @login_required
 def summary():
@@ -352,7 +349,6 @@ def edit_pesanan(bil_no):
         conn.close()
         return redirect(url_for('pesanan'))
 
-    # GET: ambil data lama
     c.execute("SELECT * FROM pesanan WHERE bil_no = ?", (bil_no,))
     pesanan = c.fetchone()
     conn.close()
