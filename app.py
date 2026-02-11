@@ -56,12 +56,6 @@ def logout():
 	
 	
 
-# Route root (redirect ke pesanan kalau dah login, atau ke login kalau belum)
-@app.route('/')
-def index():
-    if current_user.is_authenticated:
-        return redirect(url_for('pesanan'))
-    return redirect(url_for('login'))
 
 # Path database & resit
 DB_PATH = 'aus.db'
