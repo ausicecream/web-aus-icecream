@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 from collections import defaultdict
 
 app = Flask(__name__)
-app.secret_key = 'wyh_7237_rahsia'  # Tukar ke string random panjang kalau nak lebih selamat
+app.secret_key = 'wyh_7237_rahsia'  # Tukar kalau nak lebih selamat
 
 # Setup Flask-Login
 login_manager = LoginManager()
@@ -40,7 +40,7 @@ def login():
             user = User('1')
             login_user(user)
             flash('Login berjaya!', 'success')
-            return redirect(url_for('home'))
+            return redirect(url_for('pesanan'))
         else:
             flash('Username atau password salah!', 'danger')
 
@@ -53,8 +53,57 @@ def logout():
     logout_user()
     flash('Anda telah log keluar.', 'info')
     return redirect(url_for('login'))
+	
+	
 
-# Route root - sekarang papar halaman home (dashboard ringkas)
+# Route root (redirect ke pesanan kalau dah login, atau ke login kalau belum)
+@app.route('/')
+def index():
+    if current_user.is_authenticated:
+        return redirect(url_for('pesanan'))
+    return redirect(url_for('login'))
+
+# Path database & resit
+DB_PATH = 'aus.db'
+RESIT_PATH = 'resit'
+os.makedirs(RESIT_PATH, exist_ok=True)
+
+# Fungsi sambung DB
+def get_db():
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    return conn
+
+# Setup DB (jalan sekali)
+def init_db():
+    conn = get_db()
+    c = conn.cursor()
+
+    c.execute('''CREATE TABLE IF NOT EXISTS pesanan
+                 (bil_no INTEGER PRIMARY KEY AUTOINCREMENT, 
+                  nama TEXT, tel_no TEXT, tarikh TEXT, alamat TEXT,
+                  package TEXT, qty INTEGER, total_price REAL, discount REAL, 
+                  transport REAL, deposit REAL, balance REAL,
+                  resit_path TEXT)''')
+
+    c.execute('''CREATE TABLE IF NOT EXISTS stock_perisa
+                 (perisa TEXT PRIMARY KEY, in_qty INTEGER DEFAULT 0, out_qty INTEGER DEFAULT 0, balance INTEGER DEFAULT 0)''')
+    c.execute('''CREATE TABLE IF NOT EXISTS stock_cone
+                 (cone TEXT PRIMARY KEY, in_qty INTEGER DEFAULT 0, out_qty INTEGER DEFAULT 0, balance INTEGER DEFAULT 0)''')
+
+    perisa_list = ['COKELAT', 'OREO', 'STRAWBAREY', 'JAGUNG', 'KELADI']
+    cone_list = ['MINI', 'MEDIUM', 'DOUBLE']
+    for p in perisa_list:
+        c.execute("INSERT OR IGNORE INTO stock_perisa (perisa) VALUES (?)", (p,))
+    for cone in cone_list:
+        c.execute("INSERT OR IGNORE INTO stock_cone (cone) VALUES (?)", (cone,))
+
+    conn.commit()
+    conn.close()
+    print("Database aus.db disemak dan diinisialisasi.")
+
+init_db()
+
 @app.route('/', methods=['GET', 'POST'])
 @login_required
 def home():
@@ -316,9 +365,11 @@ def summary():
     conn = get_db()
     c = conn.cursor()
 
+    # Tahun pilihan (default tahun sekarang)
     tahun = request.form.get('tahun', type=int) or datetime.now().year
-    tahun_list = list(range(tahun - 5, tahun + 6))
+    tahun_list = list(range(tahun - 5, tahun + 6))  # 5 tahun sebelum & selepas
 
+    # Jumlah tempahan & hasil tahun pilihan
     c.execute("""
         SELECT COUNT(*), COALESCE(SUM(total_price - discount + transport - deposit), 0)
         FROM pesanan
@@ -328,15 +379,18 @@ def summary():
     tahun_tempahan = tahun_tempahan or 0
     tahun_hasil = tahun_hasil or 0.0
 
+    # Pesanan pending (balance > 0)
     c.execute("SELECT COUNT(*) FROM pesanan WHERE balance > 0")
     pesanan_pending = c.fetchone()[0] or 0
 
+    # Stok rendah (balance < 2)
     c.execute("SELECT COUNT(*) FROM stock_perisa WHERE balance < 2")
     perisa_rendah = c.fetchone()[0] or 0
     c.execute("SELECT COUNT(*) FROM stock_cone WHERE balance < 2")
     cone_rendah = c.fetchone()[0] or 0
     stok_rendah = perisa_rendah + cone_rendah
 
+    # Ringkasan bulanan
     bulan_nama = ["Januari", "Februari", "Mac", "April", "Mei", "Jun", 
                   "Julai", "Ogos", "September", "Oktober", "November", "Disember"]
     bulanan_data = []
@@ -369,7 +423,7 @@ def summary():
                            stok_rendah=stok_rendah,
                            bulanan_data=bulanan_data,
                            title="Summary")
-
+						   
 # Route View Resit
 @app.route('/resit/<filename>')
 @login_required
