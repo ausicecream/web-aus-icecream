@@ -59,24 +59,7 @@ def logout():
     flash('Anda telah log keluar.', 'info')
     return redirect(url_for('login'))
 
-# Lindungi semua route penting
-@app.route('/')
-@login_required
-def home():
-    # ... kod home awak kekal sama
-    pass
 
-@app.route('/pesanan', methods=['GET', 'POST'])
-@login_required
-def pesanan():
-    # ... kod pesanan awak kekal sama
-    pass
-
-@app.route('/stock', methods=['GET', 'POST'])
-@login_required
-def stock():
-    # ... kod stock awak kekal sama
-    pass	
 	
 # Path database
 DB_PATH = 'aus.db'
@@ -189,6 +172,7 @@ def get_db():
                            event_alerts=event_alerts)
 						   
 @app.route('/pesanan', methods=['GET', 'POST'])
+@login_required
 def pesanan():
     conn = get_db()
     c = conn.cursor()
@@ -364,6 +348,7 @@ def mark_done(bil_no):
 	
 # Route Stock
 @app.route('/stock', methods=['GET', 'POST'])
+@login_required
 def stock():
     conn = get_db()
     c = conn.cursor()
