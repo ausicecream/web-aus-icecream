@@ -101,11 +101,14 @@ init_db()
 @app.route('/', methods=['GET', 'POST'])
 @login_required
 def home():
+    # Nilai default supaya tak crash walaupun database error
     total_hasil = 0.0
     today_orders = 0
     pesanan_pending = 0
     stok_rendah = []
     event_alerts = []
+    tahun = datetime.now().year
+    tahun_list = list(range(tahun - 5, tahun + 6))
 
     try:
         conn = get_db()
@@ -156,13 +159,19 @@ def home():
                     'days_left': days_left,
                     'status': status
                 })
-            except Exception as e:
-                print("Error process event:", str(e))
+            except Exception as inner_e:
+                print(f"Error process satu event: {inner_e}")
 
         conn.close()
 
     except Exception as e:
-        print("Error di route home:", str(e))
+        print(f"ERROR BESAR DI HOME: {str(e)}")
+        # Nilai default kalau crash
+        total_hasil = 0.0
+        today_orders = 0
+        pesanan_pending = 0
+        stok_rendah = []
+        event_alerts = []
 
     return render_template('home.html',
                            total_hasil=round(total_hasil, 2),
@@ -170,6 +179,8 @@ def home():
                            pesanan_pending=pesanan_pending,
                            stok_rendah=stok_rendah,
                            event_alerts=event_alerts,
+                           tahun=tahun,
+                           tahun_list=tahun_list,
                            title="Home - AUS Ice Cream")
 
 # Route Pesanan
