@@ -187,7 +187,7 @@ def pesanan():
         pdf.add_page()
 
         try:
-            pdf.image('static/images/auslogo.png', x=10, y=5, w=25)
+            pdf.image('static/images/auslogo.png', x=10, y=5, w=20)
         except Exception as e:
             print("Logo tidak dijumpai:", e)
 
@@ -196,7 +196,8 @@ def pesanan():
         pdf.set_font("Helvetica", "B", 11)
         pdf.cell(0, 6, txt="Resit Pesanan Rasmi", ln=1, align="C")
         pdf.set_font("Helvetica", "", 9)
-        pdf.cell(0, 5, txt=f"Bil No: {bil_no} | Tarikh: {datetime.now().strftime('%d/%m/%Y %H:%M')}", ln=1, align="C")
+        pdf.cell(0, 5, txt=f"Bil No: {bil_no} | Tarikh: {datetime.now().strftime('%d/%m/%Y %H:%M')}", ln=1,
+                 align="C")
         pdf.ln(3)
 
         pdf.set_draw_color(255, 105, 180)
@@ -221,53 +222,64 @@ def pesanan():
         pdf.multi_cell(150, 6, txt=alamat or "-", border=0)
         pdf.ln(3)
 
-        pdf.set_font("Helvetica", "B", 10)
-        pdf.cell(0, 6, txt="BUTIRAN PESANAN", ln=1)
-        pdf.set_font("Helvetica", "", 9)
-        pdf.set_fill_color(245, 245, 245)
-        pdf.cell(55, 7, txt="Package", border=1, fill=True)
-        pdf.cell(25, 7, txt="Qty", border=1, fill=True)
-        pdf.cell(45, 7, txt="Harga Unit", border=1, fill=True)
-        pdf.cell(45, 7, txt="Jumlah", border=1, ln=1, fill=True)
+        # Butiran Pesanan (kotak)
+        pdf.set_font("Helvetica", "B", 11)
+        pdf.cell(w=0, h=7, txt="BUTIRAN PESANAN", border=1, ln=1, align="C")
+        pdf.set_font("Helvetica", "", 10)
 
-        pdf.cell(55, 7, txt=package, border=1)
-        pdf.cell(25, 7, txt=str(qty), border=1, align="C")
-        pdf.cell(45, 7, txt=f"RM{harga_unit:.2f}", border=1, align="R")
-        pdf.cell(45, 7, txt=f"RM{total_price:.2f}", border=1, ln=1, align="R")
+        pdf.cell(w=70, h=8, txt="Package", border=1, align="C")
+        pdf.cell(w=30, h=8, txt="Qty", border=1, align="C")
+        pdf.cell(w=50, h=8, txt="Harga Unit", border=1, align="C")
+        pdf.cell(w=40, h=8, txt="Jumlah", border=1, ln=1, align="C")
+
+        harga_unit = "RM0.60" if package == "MINI" else "RM1.00"
+        pdf.cell(w=70, h=8, txt=package, border=1)
+        pdf.cell(w=30, h=8, txt=str(qty), border=1, align="C")
+        pdf.cell(w=50, h=8, txt=harga_unit, border=1, align="C")
+        pdf.cell(w=40, h=8, txt=f"RM{total_price}", border=1, ln=1, align="R")
+
         pdf.ln(5)
 
-        pdf.set_font("Helvetica", "B", 10)
-        pdf.cell(130, 8, txt="JUMLAH BAYARAN", border=0)
-        pdf.cell(60, 8, txt=f"RM{total_price:.2f}", border=0, ln=1, align="R")
+        # Jumlah Bayaran (kotak)
+        pdf.set_font("Helvetica", "B", 11)
+        pdf.cell(w=0, h=7, txt="JUMLAH BAYARAN", border=1, ln=1, align="C")
+        pdf.set_font("Helvetica", "", 10)
 
-        pdf.set_font("Helvetica", "", 9)
-        pdf.cell(130, 6, txt="Diskaun", border=0)
-        pdf.cell(60, 6, txt=f"- RM{discount:.2f}", border=0, ln=1, align="R")
-        pdf.cell(130, 6, txt="Kos Transport", border=0)
-        pdf.cell(60, 6, txt=f"+ RM{transport:.2f}", border=0, ln=1, align="R")
-        pdf.cell(130, 6, txt="Deposit", border=0)
-        pdf.cell(60, 6, txt=f"- RM{deposit:.2f}", border=0, ln=1, align="R")
+        pdf.cell(w=110, h=7, txt="Jumlah Pesanan:", border="LRT", align="L")
+        pdf.cell(w=80, h=7, txt=f"RM{total_price}", border="RT", ln=1, align="R")
+
+        pdf.cell(w=110, h=7, txt="Diskaun:", border="L", align="L")
+        pdf.cell(w=80, h=7, txt=f"-RM{discount}", border="R", ln=1, align="R")
+
+        pdf.cell(w=110, h=7, txt="Kos Transport:", border="L", align="L")
+        pdf.cell(w=80, h=7, txt=f"+RM{transport}", border="R", ln=1, align="R")
+
+        pdf.cell(w=110, h=7, txt="Deposit:", border="L", align="L")
+        pdf.cell(w=80, h=7, txt=f"-RM{deposit}", border="R", ln=1, align="R")
 
         pdf.set_font("Helvetica", "B", 11)
-        pdf.set_text_color(236, 64, 122)
-        pdf.cell(130, 10, txt="BAKI BAYARAN", border=0)
-        pdf.cell(60, 10, txt=f"RM{balance:.2f}", border=0, ln=1, align="R")
+        pdf.cell(w=110, h=8, txt="**BAKI BAYARAN:**", border=1, align="L")
+        pdf.cell(w=80, h=8, txt=f"**RM{balance}**", border=1, ln=1, align="R")
 
         pdf.ln(8)
-        pdf.set_font("Helvetica", "I", 8)
-        pdf.set_text_color(0, 0, 0)
-        pdf.cell(190, 5, txt="Terima kasih atas tempahan anda! Baki bayaran hendaklah dijelaskan 3 hari sebelum majlis.")
-		pdf.ln(3)
-        pdf.cell(190, 5, txt="Hubungi kami: 011-15371071 / 014-4007237")
-        pdf.ln(3)
 
-        pdf.set_font("Helvetica", "B", 9)
-        pdf.set_text_color(236, 64, 122)
-        pdf.cell(0, 6, txt="Maklumat Pembayaran", ln=1)
-        pdf.set_font("Helvetica", "", 9)
-        pdf.set_text_color(0, 0, 0)
-        pdf.cell(190, 5, txt="Maybank Acc No: 151520082883", ln=1)
-        pdf.cell(190, 5, txt="NORMI IDAYU BINTI YUNOS", ln=1)
+        # Terima kasih & peringatan
+        pdf.set_font("Helvetica", "", 10)
+        pdf.cell(w=0, h=6, txt="Terima kasih atas tempahan anda!")
+        pdf.ln(5)
+        pdf.cell(w=0, h=7, txt="Peringatan: Baki bayaran hendaklah dibuat 3 hari sebelum tarikh majlis berlangsung!")
+        pdf.ln(5)
+
+        # Bank Detail
+        pdf.set_font("Helvetica", "I", 10)
+        pdf.cell(w=0, h=6, txt="ONLINE PAYMENT", ln=1)
+        pdf.set_font("Helvetica", "", 10)
+        pdf.cell(w=0, h=6, txt="Maybank Acc No: 151520082883", ln=1)
+        pdf.cell(w=0, h=6, txt="NORMI IDAYU BINTI YUNOS", ln=1)
+        pdf.ln(3)
+        pdf.set_font("Helvetica", "I", 10)
+        pdf.cell(w=0, h=6, txt="Hubungi kami jika ada sebarang pertanyaan.", ln=1)
+        pdf.cell(w=0, h=6, txt="NORMI 011-15371071 | EN.RAJA 014-4007237", ln=1)
 
         pdf_output = BytesIO()
         pdf.output(pdf_output)
@@ -504,11 +516,12 @@ def regenerate_resit(bil_no):
     harga_unit = 0.60 if package == 'MINI' else 1.00
     total_price = qty * harga_unit
 
+    # Generate PDF
     pdf = FPDF(orientation='P', unit='mm', format='A4')
     pdf.add_page()
 
     try:
-        pdf.image('static/images/auslogo.png', x=10, y=5, w=25)
+        pdf.image('static/images/auslogo.png', x=10, y=5, w=20)
     except Exception as e:
         print("Logo tidak dijumpai:", e)
 
@@ -517,7 +530,8 @@ def regenerate_resit(bil_no):
     pdf.set_font("Helvetica", "B", 11)
     pdf.cell(0, 6, txt="Resit Pesanan Rasmi", ln=1, align="C")
     pdf.set_font("Helvetica", "", 9)
-    pdf.cell(0, 5, txt=f"Bil No: {bil_no} | Tarikh: {datetime.now().strftime('%d/%m/%Y %H:%M')}", ln=1, align="C")
+    pdf.cell(0, 5, txt=f"Bil No: {bil_no} | Tarikh: {datetime.now().strftime('%d/%m/%Y %H:%M')}", ln=1,
+             align="C")
     pdf.ln(3)
 
     pdf.set_draw_color(255, 105, 180)
@@ -542,53 +556,64 @@ def regenerate_resit(bil_no):
     pdf.multi_cell(150, 6, txt=alamat or "-", border=0)
     pdf.ln(3)
 
-    pdf.set_font("Helvetica", "B", 10)
-    pdf.cell(0, 6, txt="BUTIRAN PESANAN", ln=1)
-    pdf.set_font("Helvetica", "", 9)
-    pdf.set_fill_color(245, 245, 245)
-    pdf.cell(55, 7, txt="Package", border=1, fill=True)
-    pdf.cell(25, 7, txt="Qty", border=1, fill=True)
-    pdf.cell(45, 7, txt="Harga Unit", border=1, fill=True)
-    pdf.cell(45, 7, txt="Jumlah", border=1, ln=1, fill=True)
+    # Butiran Pesanan (kotak)
+    pdf.set_font("Helvetica", "B", 11)
+    pdf.cell(w=0, h=7, txt="BUTIRAN PESANAN", border=1, ln=1, align="C")
+    pdf.set_font("Helvetica", "", 10)
 
-    pdf.cell(55, 7, txt=package, border=1)
-    pdf.cell(25, 7, txt=str(qty), border=1, align="C")
-    pdf.cell(45, 7, txt=f"RM{harga_unit:.2f}", border=1, align="R")
-    pdf.cell(45, 7, txt=f"RM{total_price:.2f}", border=1, ln=1, align="R")
+    pdf.cell(w=70, h=8, txt="Package", border=1, align="C")
+    pdf.cell(w=30, h=8, txt="Qty", border=1, align="C")
+    pdf.cell(w=50, h=8, txt="Harga Unit", border=1, align="C")
+    pdf.cell(w=40, h=8, txt="Jumlah", border=1, ln=1, align="C")
+
+    harga_unit = "RM0.60" if package == "MINI" else "RM1.00"
+    pdf.cell(w=70, h=8, txt=package, border=1)
+    pdf.cell(w=30, h=8, txt=str(qty), border=1, align="C")
+    pdf.cell(w=50, h=8, txt=harga_unit, border=1, align="C")
+    pdf.cell(w=40, h=8, txt=f"RM{total_price}", border=1, ln=1, align="R")
+
     pdf.ln(5)
 
-    pdf.set_font("Helvetica", "B", 10)
-    pdf.cell(130, 8, txt="JUMLAH BAYARAN", border=0)
-    pdf.cell(60, 8, txt=f"RM{total_price:.2f}", border=0, ln=1, align="R")
+    # Jumlah Bayaran (kotak)
+    pdf.set_font("Helvetica", "B", 11)
+    pdf.cell(w=0, h=7, txt="JUMLAH BAYARAN", border=1, ln=1, align="C")
+    pdf.set_font("Helvetica", "", 10)
 
-    pdf.set_font("Helvetica", "", 9)
-    pdf.cell(130, 6, txt="Diskaun", border=0)
-    pdf.cell(60, 6, txt=f"- RM{discount:.2f}", border=0, ln=1, align="R")
-    pdf.cell(130, 6, txt="Kos Transport", border=0)
-    pdf.cell(60, 6, txt=f"+ RM{transport:.2f}", border=0, ln=1, align="R")
-    pdf.cell(130, 6, txt="Deposit", border=0)
-    pdf.cell(60, 6, txt=f"- RM{deposit:.2f}", border=0, ln=1, align="R")
+    pdf.cell(w=110, h=7, txt="Jumlah Pesanan:", border="LRT", align="L")
+    pdf.cell(w=80, h=7, txt=f"RM{total_price}", border="RT", ln=1, align="R")
+
+    pdf.cell(w=110, h=7, txt="Diskaun:", border="L", align="L")
+    pdf.cell(w=80, h=7, txt=f"-RM{discount}", border="R", ln=1, align="R")
+
+    pdf.cell(w=110, h=7, txt="Kos Transport:", border="L", align="L")
+    pdf.cell(w=80, h=7, txt=f"+RM{transport}", border="R", ln=1, align="R")
+
+    pdf.cell(w=110, h=7, txt="Deposit:", border="L", align="L")
+    pdf.cell(w=80, h=7, txt=f"-RM{deposit}", border="R", ln=1, align="R")
 
     pdf.set_font("Helvetica", "B", 11)
-    pdf.set_text_color(236, 64, 122)
-    pdf.cell(130, 10, txt="BAKI BAYARAN", border=0)
-    pdf.cell(60, 10, txt=f"RM{balance:.2f}", border=0, ln=1, align="R")
+    pdf.cell(w=110, h=8, txt="**BAKI BAYARAN:**", border=1, align="L")
+    pdf.cell(w=80, h=8, txt=f"**RM{balance}**", border=1, ln=1, align="R")
 
     pdf.ln(8)
-    pdf.set_font("Helvetica", "I", 8)
-    pdf.set_text_color(0, 0, 0)
-    pdf.cell(190, 5, txt="Terima kasih atas tempahan anda! Baki bayaran hendaklah dijelaskan 3 hari sebelum majlis.")
-	pdf.ln(3)
-    pdf.cell(190, 5, txt="Hubungi kami: 011-15371071 / 014-4007237")
-    pdf.ln(3)
 
-    pdf.set_font("Helvetica", "B", 9)
-    pdf.set_text_color(236, 64, 122)
-    pdf.cell(0, 6, txt="Maklumat Pembayaran", ln=1)
-    pdf.set_font("Helvetica", "", 9)
-    pdf.set_text_color(0, 0, 0)
-    pdf.cell(190, 5, txt="Maybank Acc No: 151520082883", ln=1)
-    pdf.cell(190, 5, txt="NORMI IDAYU BINTI YUNOS", ln=1)
+    # Terima kasih & peringatan
+    pdf.set_font("Helvetica", "", 10)
+    pdf.cell(w=0, h=6, txt="Terima kasih atas tempahan anda!")
+    pdf.ln(5)
+    pdf.cell(w=0, h=7, txt="Peringatan: Baki bayaran hendaklah dibuat 3 hari sebelum tarikh majlis berlangsung!")
+    pdf.ln(5)
+
+    # Bank Detail
+    pdf.set_font("Helvetica", "I", 10)
+    pdf.cell(w=0, h=6, txt="ONLINE PAYMENT", ln=1)
+    pdf.set_font("Helvetica", "", 10)
+    pdf.cell(w=0, h=6, txt="Maybank Acc No: 151520082883", ln=1)
+    pdf.cell(w=0, h=6, txt="NORMI IDAYU BINTI YUNOS", ln=1)
+    pdf.ln(3)
+    pdf.set_font("Helvetica", "I", 10)
+    pdf.cell(w=0, h=6, txt="Hubungi kami jika ada sebarang pertanyaan.", ln=1)
+    pdf.cell(w=0, h=6, txt="NORMI 011-15371071 | EN.RAJA 014-4007237", ln=1)
 
     pdf_output = BytesIO()
     pdf.output(pdf_output)
