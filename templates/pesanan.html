@@ -152,6 +152,15 @@
                                     Delete
                                 </button>
                             </form>
+							
+							<!-- Button Mark as Done (hanya kalau masih Pending) -->
+                            {% if row['balance'] > 0 %}
+                            <form method="POST" action="{{ url_for('mark_done', bil_no=row['bil_no']) }}" style="display:inline;" onsubmit="return confirm('Anda pasti nak tandakan pesanan Bil {{ row['bil_no'] }} ini sebagai DONE?');">
+                                <button type="submit" class="text-xs bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 transition">
+                                    Mark as Done
+                                </button>
+                            </form>
+                            {% endif %}
                         </td>
                     </tr>
                     {% endfor %}
