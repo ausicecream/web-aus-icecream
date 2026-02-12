@@ -10,7 +10,7 @@
         <p class="text-gray-600">Sistem Pengurusan Pesanan & Stok Aiskrim</p>
     </div>
 
-
+    <!-- Kad Ringkasan -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <div class="bg-white rounded-xl shadow-md p-6 text-center">
             <h3 class="text-lg font-semibold text-pink-600 mb-2">Total Hasil</h3>
@@ -33,12 +33,6 @@
         </div>
     </div>
 
-    {% if stok_rendah %}
-    <div class="bg-red-50 border-l-4 border-red-500 p-6 rounded-xl">
-        <h3 class="text-lg font-semibold text-red-700 mb-2">Stok Rendah!</h3>
-        <p class="text-red-600 font-medium">{{ stok_rendah|join(', ') }}</p>
-    </div>
-    {% endif %}
 
     {% if event_alerts %}
     <div class="bg-yellow-50 border-l-4 border-yellow-500 p-6 rounded-xl">
