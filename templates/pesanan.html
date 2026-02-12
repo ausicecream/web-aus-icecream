@@ -3,7 +3,7 @@
 {% block content %}
 <div class="max-w-4xl mx-auto space-y-8">
 
-    <!-- Tajuk halaman -->
+    <!-- Tajuk halaman (TETAP SAMA) -->
     <div class="text-center">
         <h1 class="text-3xl font-bold text-pink-600 mb-2">Pesanan Baru</h1>
         <p class="text-gray-600">Isi maklumat pelanggan & pesanan dengan lengkap</p>
@@ -16,15 +16,14 @@
               hx-target="#pesanan-senarai"
               hx-swap="innerHTML"
               hx-indicator="#loading-indicator"
-              hx-on::after-request="if(event.detail.successful) { event.detail.xhr.responseText.includes('Resit_Bil') && window.open('/view_resit/' + event.detail.xhr.responseText.match(/Resit_Bil\\d+[^<]+/)[0], '_blank'); }"
               class="space-y-5" onsubmit="return validateForm()">
 
-            <!-- Loading indicator -->
+            <!-- Loading indicator (TETAP SAMA) -->
             <div id="loading-indicator" class="htmx-indicator text-center text-pink-600 font-medium py-2 hidden">
                 Sedang menyimpan pesanan & generate resit... Mohon tunggu sebentar.
             </div>
 
-            <!-- Maklumat Pelanggan -->
+            <!-- Maklumat Pelanggan (TETAP SAMA) -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div>
                     <label class="block text-gray-700 font-medium mb-1">Nama Pelanggan <span class="text-red-500">*</span></label>
@@ -36,6 +35,7 @@
                 </div>
             </div>
 
+            <!-- Tarikh & Package (TETAP SAMA) -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div>
                     <label class="block text-gray-700 font-medium mb-1">Tarikh Event <span class="text-red-500">*</span></label>
@@ -51,13 +51,13 @@
                 </div>
             </div>
 
-            <!-- Alamat Event -->
+            <!-- Alamat Event (TETAP SAMA) -->
             <div>
                 <label class="block text-gray-700 font-medium mb-1">Alamat Event <span class="text-red-500">*</span></label>
                 <textarea name="alamat" required rows="4" placeholder="Contoh: No 12, Jalan Bahagia 5, Taman Seri, 43000 Kajang, Selangor" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-400 focus:border-pink-400 outline-none"></textarea>
             </div>
 
-            <!-- Butiran Pesanan -->
+            <!-- Butiran Pesanan (TETAP SAMA) -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div>
                     <label class="block text-gray-700 font-medium mb-1">Bilangan (Qty) <span class="text-red-500">*</span></label>
@@ -69,7 +69,7 @@
                 </div>
             </div>
 
-            <!-- Bayaran -->
+            <!-- Bayaran (TETAP SAMA) -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
                 <div>
                     <label class="block text-gray-700 font-medium mb-1">Diskaun (RM)</label>
@@ -96,7 +96,7 @@
         </form>
     </div>
 
-    <!-- Senarai Pesanan Terkini (dengan HTMX untuk auto refresh) -->
+    <!-- Senarai Pesanan Terkini (UBAH & TAMBAH HTMX di sini) -->
     <div id="pesanan-senarai" 
          hx-get="{{ url_for('pesanan') }}" 
          hx-trigger="load, submit from:#pesanan-form" 
@@ -132,12 +132,16 @@
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ row['package'] }}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ row['qty'] }}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">RM {{ row['total_price']|round(2) }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-bold {% if row['balance'] > 0 %}text-red-600{% else %}text-green-600{% endif %}">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-bold {% if row['balance'] > 0 %}text-red-600{% else %}text-green-700{% endif %}">
                             RM {{ row['balance']|round(2) }}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm">
-                            <span class="px-3 py-1 rounded-full text-xs font-medium {% if row['balance'] > 0 %}bg-red-100 text-red-800{% else %}bg-green-100 text-green-600{% endif %}">
-                                {{ 'Pending' if row['balance'] > 0 else 'Done' }}
+                            <span class="px-3 py-1 rounded-full text-xs font-medium {% if row['balance'] > 0 %}bg-red-100 text-red-800{% else %}bg-green-100 text-green-800 font-bold{% endif %}">
+                                {% if row['balance'] > 0 %}
+                                    Pending
+                                {% else %}
+                                    <span title="Baki bayaran telah diterima penuh">Done ✓</span>
+                                {% endif %}
                             </span>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm space-x-2">
@@ -181,7 +185,7 @@
     </div>
 </div>
 
-<!-- JavaScript: auto kira + validation -->
+<!-- JavaScript: auto kira + validation (TETAP SAMA) -->
 <script>
 function kiraTotal() {
     const qty = parseInt(document.querySelector('[name="qty"]').value) || 0;
@@ -224,14 +228,13 @@ function validateForm() {
     return true;
 }
 
-// Pasang event listener bila halaman load
 document.addEventListener('DOMContentLoaded', function() {
     const qtyInput = document.querySelector('[name="qty"]');
     const packageSelect = document.querySelector('[name="package"]');
     if (qtyInput && packageSelect) {
         qtyInput.addEventListener('input', kiraTotal);
         packageSelect.addEventListener('change', kiraTotal);
-        kiraTotal(); // Kira awal kalau ada nilai
+        kiraTotal();
     }
 });
 </script>
