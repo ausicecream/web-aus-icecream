@@ -96,7 +96,12 @@
     </div>
 
     <!-- Senarai Pesanan Terkini (dengan ID untuk HTMX target) -->
-    <div id="pesanan-senarai" class="bg-white rounded-xl shadow-md p-6">
+    <div id="pesanan-senarai"
+	    hx-get="{{ url_for('pesanan') }}"
+		hx-trigger="load, regenerate from:#pesanan-senarai"
+		hx-swap="innerHTML"
+		class="bg-white rounded-xl shadow-md p-6">
+		
         <h2 class="text-xl font-bold text-pink-600 mb-4">Senarai Pesanan Terkini</h2>
 
         {% if pesanan_list %}
@@ -136,20 +141,19 @@
                         <td class="px-6 py-4 whitespace-nowrap text-sm space-x-2">
                             {% if row['resit_path'] %}
                             <a href="{{ url_for('view_resit', filename=row['resit_path']) }}" target="_blank" class="text-pink-600 hover:underline text-xs">
-                                View Resit Lama
-                            </a>
-                            {% endif %}
-						<td class="px-6 py-4 whitespace-nowrap text-sm space-x-2">
-                            {% if row['resit_path'] %}
-                            <a href="{{ url_for('view_resit', filename=row['resit_path']) }}" target="_blank" class="text-pink-600 hover:underline text-xs">
-                                View Resit Update
+                                View Resit Terkini
                             </a>
 							{% else %}
                             <span class="text-gray-400 text-xs">Tiada Resit</span>
                             {% endif %}	
 							
 							<!-- Button Generate Baru (kalau nak regenerate) -->
-                            <form method="POST" action="{{ url_for('regenerate_resit', bil_no=row['bil_no']) }}" style="display:inline;">
+                            <form method="POST" action="{{ url_for('regenerate_resit', bil_no=row['bil_no']) }}"
+							      style="display:inline;"
+								  hx-post="{{ url_for('regenerate_resit', bil_no=row['bil_no']) }}"
+								  hx-target="#pesanan-senarai"
+								  hx-swap="innerHTML"
+								  hx-indicator="#loading-indicator">
                                 <button type="submit" class="text-xs bg-purple-600 text-white px-3 py-1 rounded hover:bg-purple-700 transition">
                                     Generate Resit Baru
                                 </button>
