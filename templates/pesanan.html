@@ -95,13 +95,13 @@
         </form>
     </div>
 
-    <!-- Senarai Pesanan Terkini (dengan ID untuk HTMX target) -->
-    <div id="pesanan-senarai"
-	    hx-get="{{ url_for('pesanan') }}"
-		hx-trigger="load, regenerate from:#pesanan-senarai"
-		hx-swap="innerHTML"
-		class="bg-white rounded-xl shadow-md p-6">
-		
+    <!-- Senarai Pesanan Terkini (dengan HTMX untuk auto refresh) -->
+    <div id="pesanan-senarai" 
+         hx-get="{{ url_for('pesanan') }}" 
+         hx-trigger="load, regenerate from:#pesanan-senarai" 
+         hx-swap="innerHTML"
+         class="bg-white rounded-xl shadow-md p-6">
+
         <h2 class="text-xl font-bold text-pink-600 mb-4">Senarai Pesanan Terkini</h2>
 
         {% if pesanan_list %}
@@ -143,17 +143,16 @@
                             <a href="{{ url_for('view_resit', filename=row['resit_path']) }}" target="_blank" class="text-pink-600 hover:underline text-xs">
                                 View Resit Terkini
                             </a>
-							{% else %}
+                            {% else %}
                             <span class="text-gray-400 text-xs">Tiada Resit</span>
-                            {% endif %}	
-							
-							<!-- Button Generate Baru (kalau nak regenerate) -->
-                            <form method="POST" action="{{ url_for('regenerate_resit', bil_no=row['bil_no']) }}"
-							      style="display:inline;"
-								  hx-post="{{ url_for('regenerate_resit', bil_no=row['bil_no']) }}"
-								  hx-target="#pesanan-senarai"
-								  hx-swap="innerHTML"
-								  hx-indicator="#loading-indicator">
+                            {% endif %}
+
+                            <!-- Button Generate Baru -->
+                            <form method="POST" action="{{ url_for('regenerate_resit', bil_no=row['bil_no']) }}" style="display:inline;" 
+                                  hx-post="{{ url_for('regenerate_resit', bil_no=row['bil_no']) }}" 
+                                  hx-target="#pesanan-senarai" 
+                                  hx-swap="innerHTML" 
+                                  hx-indicator="#loading-indicator">
                                 <button type="submit" class="text-xs bg-purple-600 text-white px-3 py-1 rounded hover:bg-purple-700 transition">
                                     Generate Resit Baru
                                 </button>
@@ -179,7 +178,6 @@
         <p class="text-center text-gray-500 py-8">Belum ada pesanan lagi.</p>
         {% endif %}
     </div>
-
 </div>
 
 <!-- JavaScript: auto kira + validation -->
@@ -199,7 +197,6 @@ function kiraBalance() {
     const discount = parseFloat(document.querySelector('[name="discount"]').value) || 0;
     const transport = parseFloat(document.querySelector('[name="transport"]').value) || 0;
     const deposit = parseFloat(document.querySelector('[name="deposit"]').value) || 0;
-
     const balance = total - discount + transport - deposit;
     document.querySelector('[name="balance"]').value = 'RM ' + balance.toFixed(2);
 }
@@ -213,32 +210,27 @@ function validateForm() {
         package: document.querySelector('[name="package"]').value,
         qty: parseInt(document.querySelector('[name="qty"]').value) || 0
     };
-
     for (let key in fields) {
         if (!fields[key] || (key === 'qty' && fields[key] < 1)) {
             alert("Sila isi SEMUA maklumat penting dengan lengkap!\n(Nama, Telefon, Tarikh, Alamat, Package, Qty minimum 1)");
             return false;
         }
     }
-
     if (!/^[0-9]{10,12}$/.test(fields.tel_no)) {
         alert("No telefon mesti 10-12 digit tanpa - atau spasi!");
         return false;
     }
-
     return true;
 }
 
-// Pasang event listener bila halaman load (penting untuk HTMX reload)
+// Pasang event listener bila halaman load
 document.addEventListener('DOMContentLoaded', function() {
     const qtyInput = document.querySelector('[name="qty"]');
     const packageSelect = document.querySelector('[name="package"]');
-
     if (qtyInput && packageSelect) {
         qtyInput.addEventListener('input', kiraTotal);
         packageSelect.addEventListener('change', kiraTotal);
-        // Kira awal kalau ada nilai
-        kiraTotal();
+        kiraTotal(); // Kira awal kalau ada nilai
     }
 });
 </script>
