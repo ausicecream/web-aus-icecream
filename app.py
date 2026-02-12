@@ -196,8 +196,7 @@ def pesanan():
         pdf.set_font("Helvetica", "B", 11)
         pdf.cell(0, 6, txt="Resit Pesanan Rasmi", ln=1, align="C")
         pdf.set_font("Helvetica", "", 9)
-        pdf.cell(0, 5, txt=f"Bil No: {bil_no} | Tarikh: {datetime.now().strftime('%d/%m/%Y %H:%M')}", ln=1,
-                 align="C")
+        pdf.cell(0, 5, txt=f"Bil No: {bil_no} | Tarikh: {datetime.now().strftime('%d/%m/%Y %H:%M')}", ln=1,align="C")
         pdf.ln(3)
 
         pdf.set_draw_color(255, 105, 180)
@@ -530,8 +529,7 @@ def regenerate_resit(bil_no):
     pdf.set_font("Helvetica", "B", 11)
     pdf.cell(0, 6, txt="Resit Pesanan Rasmi", ln=1, align="C")
     pdf.set_font("Helvetica", "", 9)
-    pdf.cell(0, 5, txt=f"Bil No: {bil_no} | Tarikh: {datetime.now().strftime('%d/%m/%Y %H:%M')}", ln=1,
-             align="C")
+    pdf.cell(0, 5, txt=f"Bil No: {bil_no} | Tarikh: {datetime.now().strftime('%d/%m/%Y %H:%M')}", ln=1,align="C")
     pdf.ln(3)
 
     pdf.set_draw_color(255, 105, 180)
