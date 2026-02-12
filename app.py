@@ -6,6 +6,23 @@ import sqlite3
 import os
 from datetime import datetime, timedelta
 from collections import defaultdict
+# =====================================
+#   TAMBAHAN: IMPORT & INIT FIREBASE
+# =====================================
+import firebase_admin
+from firebase_admin import credentials, storage
+
+# Init Firebase (jalan sekali je, di luar route)
+try:
+    cred = credentials.Certificate('firebase-adminsdk.json')  # nama fail JSON yang awak download dari Firebase
+    firebase_admin.initialize_app(cred, {
+        'storageBucket': 'aus-ice-cream-catering.firebasestorage.app'  # <--- PASTIKAN NAMA BUCKET BETUL
+    })
+    bucket = storage.bucket()
+    print("Firebase Storage berjaya diinisialisasi.")
+except Exception as e:
+    print("Ralat inisialisasi Firebase:", str(e))
+    bucket = None  # supaya tak crash kalau tak jumpa
 
 app = Flask(__name__)
 app.secret_key = 'wyh_7237_rahsia'  # Tukar kalau nak lebih selamat
