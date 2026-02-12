@@ -98,23 +98,61 @@ def init_db():
 
 init_db()
 
-@app.route('/')
+@app.route('/', methods=['GET', 'POST'])
 @login_required
 def home():
     conn = get_db()
     c = conn.cursor()
-    
-    # Contoh data ringkas untuk home
-    c.execute("SELECT COUNT(*) FROM pesanan")
-    total_pesanan = c.fetchone()[0]
-    
+
+    # Total hasil
     c.execute("SELECT SUM(total_price - discount + transport) FROM pesanan")
     total_hasil = c.fetchone()[0] or 0.0
-    
-    conn.close()
-    
-    return render_template('home.html', total_pesanan=total_pesanan, total_hasil=round(total_hasil, 2))
 
+    # Tempahan hari ini
+    today = datetime.now().strftime('%Y-%m-%d')
+    c.execute("SELECT COUNT(*) FROM pesanan WHERE tarikh LIKE ?", (f"%{today}%",))
+    today_orders = c.fetchone()[0]
+
+    # Stok rendah
+    c.execute("SELECT perisa FROM stock_perisa WHERE balance < 2")
+    stok_perisa_low = [row[0] for row in c.fetchall()]
+    c.execute("SELECT cone FROM stock_cone WHERE balance < 2")
+    stok_cone_low = [row[0] for row in c.fetchall()]
+    stok_rendah = stok_perisa_low + stok_cone_low
+
+    # Pemberitahuan Event Akan Datang (dalam 5 hari)
+    today_date = datetime.now().date()
+    five_days_later = today_date + timedelta(days=5)
+    c.execute("""
+        SELECT bil_no, nama, tel_no, tarikh, package, balance 
+        FROM pesanan 
+        WHERE tarikh >= ? AND tarikh <= ? 
+        ORDER BY tarikh ASC
+    """, (today_date.strftime('%Y-%m-%d'), five_days_later.strftime('%Y-%m-%d')))
+    upcoming_events = c.fetchall()
+
+    event_alerts = []
+    for event in upcoming_events:
+        event_date = datetime.strptime(event['tarikh'], '%Y-%m-%d').date()
+        days_left = (event_date - today_date).days
+        status = "Pending" if event['balance'] > 0 else "Done"
+        event_alerts.append({
+            'bil_no': event['bil_no'],
+            'nama': event['nama'],
+            'tarikh': event['tarikh'],
+            'package': event['package'],
+            'days_left': days_left,
+            'status': status
+        })
+
+    conn.close()
+
+    return render_template('home.html',
+                           title="AUS Ice Cream Catering",
+                           total_hasil=round(total_hasil, 2),
+                           today_orders=today_orders,
+                           stok_rendah=stok_rendah,
+                           event_alerts=event_alerts)
 # Route Pesanan
 @app.route('/pesanan', methods=['GET', 'POST'])
 @login_required
