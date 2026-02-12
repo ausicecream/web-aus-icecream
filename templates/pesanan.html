@@ -139,6 +139,16 @@
                                 View Resit Lama
                             </a>
                             {% endif %}
+						<td class="px-6 py-4 whitespace-nowrap text-sm space-x-2">
+                            {% if row['resit_path'] %}
+                            <a href="{{ url_for('view_resit', filename=row['resit_path']) }}" target="_blank" class="text-pink-600 hover:underline text-xs">
+                                View Resit Update
+                            </a>
+							{% else %}
+                            <span class="text-gray-400 text-xs">Tiada Resit</span>
+                            {% endif %}	
+							
+							<!-- Button Generate Baru (kalau nak regenerate) -->
                             <form method="POST" action="{{ url_for('regenerate_resit', bil_no=row['bil_no']) }}" style="display:inline;">
                                 <button type="submit" class="text-xs bg-purple-600 text-white px-3 py-1 rounded hover:bg-purple-700 transition">
                                     Generate Resit Baru
