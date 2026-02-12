@@ -98,90 +98,22 @@ def init_db():
 
 init_db()
 
-@app.route('/', methods=['GET', 'POST'])
+@app.route('/')
 @login_required
 def home():
-    # Nilai default supaya tak crash walaupun database error
-    total_hasil = 0.0
-    today_orders = 0
-    pesanan_pending = 0
-    stok_rendah = []
-    event_alerts = []
-    tahun = datetime.now().year
-    tahun_list = list(range(tahun - 5, tahun + 6))
-
-    try:
-        conn = get_db()
-        c = conn.cursor()
-
-        # Total hasil
-        c.execute("SELECT COALESCE(SUM(total_price - discount + transport - deposit), 0) FROM pesanan")
-        total_hasil = c.fetchone()[0] or 0.0
-
-        # Tempahan hari ini
-        today = datetime.now().strftime('%Y-%m-%d')
-        c.execute("SELECT COUNT(*) FROM pesanan WHERE tarikh LIKE ?", (f"%{today}%",))
-        today_orders = c.fetchone()[0] or 0
-
-        # Pesanan Pending
-        c.execute("SELECT COUNT(*) FROM pesanan WHERE balance > 0")
-        pesanan_pending = c.fetchone()[0] or 0
-
-        # Stok rendah
-        c.execute("SELECT perisa FROM stock_perisa WHERE balance < 2")
-        stok_perisa_low = [row[0] for row in c.fetchall()]
-        c.execute("SELECT cone FROM stock_cone WHERE balance < 2")
-        stok_cone_low = [row[0] for row in c.fetchall()]
-        stok_rendah = stok_perisa_low + stok_cone_low
-
-        # Event Alerts
-        today_date = datetime.now().date()
-        five_days_later = today_date + timedelta(days=5)
-        c.execute("""
-            SELECT bil_no, nama, tel_no, tarikh, package, balance
-            FROM pesanan
-            WHERE tarikh >= ? AND tarikh <= ?
-            ORDER BY tarikh ASC
-        """, (today_date.strftime('%Y-%m-%d'), five_days_later.strftime('%Y-%m-%d')))
-        upcoming_events = c.fetchall() or []
-
-        event_alerts = []
-        for event in upcoming_events:
-            try:
-                event_date = datetime.strptime(event['tarikh'], '%Y-%m-%d').date()
-                days_left = (event_date - today_date).days
-                status = "Pending" if event['balance'] > 0 else "Done"
-                event_alerts.append({
-                    'bil_no': event['bil_no'],
-                    'nama': event['nama'],
-                    'tarikh': event['tarikh'],
-                    'package': event['package'],
-                    'days_left': days_left,
-                    'status': status
-                })
-            except Exception as inner_e:
-                print(f"Error process satu event: {inner_e}")
-
-        conn.close()
-
-    except Exception as e:
-        print(f"ERROR BESAR DI HOME: {str(e)}")
-        # Nilai default kalau crash
-        total_hasil = 0.0
-        today_orders = 0
-        pesanan_pending = 0
-        stok_rendah = []
-        event_alerts = []
-
-    return render_template('home.html',
-                           total_hasil=round(total_hasil, 2),
-                           today_orders=today_orders,
-                           pesanan_pending=pesanan_pending,
-                           stok_rendah=stok_rendah,
-                           event_alerts=event_alerts,
-                           tahun=tahun,
-                           tahun_list=tahun_list,
-                           title="Home - AUS Ice Cream")
+    conn = get_db()
+    c = conn.cursor()
+    
+    # Contoh data ringkas untuk home
+    c.execute("SELECT COUNT(*) FROM pesanan")
+    total_pesanan = c.fetchone()[0]
+    
+    c.execute("SELECT SUM(total_price - discount + transport) FROM pesanan")
+    total_hasil = c.fetchone()[0] or 0.0
+    
+    conn.close()
+    
+    return render_template('home.html', total_pesanan=total_pesanan, total_hasil=round(total_hasil, 2))
 
 # Route Pesanan
 @app.route('/pesanan', methods=['GET', 'POST'])
