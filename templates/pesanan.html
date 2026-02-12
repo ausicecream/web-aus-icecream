@@ -3,27 +3,17 @@
 {% block content %}
 <div class="max-w-4xl mx-auto space-y-8">
 
-    <!-- Tajuk halaman (TETAP SAMA) -->
+    <!-- Tajuk halaman -->
     <div class="text-center">
         <h1 class="text-3xl font-bold text-pink-600 mb-2">Pesanan Baru</h1>
         <p class="text-gray-600">Isi maklumat pelanggan & pesanan dengan lengkap</p>
     </div>
 
-    <!-- Form Tambah Pesanan -->
+    <!-- Form Tambah Pesanan (tanpa HTMX) -->
     <div class="bg-white rounded-xl shadow-md p-6">
-        <form id="pesanan-form" method="POST"
-              hx-post="/pesanan"
-              hx-target="#pesanan-senarai"
-              hx-swap="innerHTML"
-              hx-indicator="#loading-indicator"
-              class="space-y-5" onsubmit="return validateForm()">
+        <form id="pesanan-form" method="POST" class="space-y-5" onsubmit="return validateForm()">
 
-            <!-- Loading indicator (TETAP SAMA) -->
-            <div id="loading-indicator" class="htmx-indicator text-center text-pink-600 font-medium py-2 hidden">
-                Sedang menyimpan pesanan & generate resit... Mohon tunggu sebentar.
-            </div>
-
-            <!-- Maklumat Pelanggan (TETAP SAMA) -->
+            <!-- Maklumat Pelanggan -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div>
                     <label class="block text-gray-700 font-medium mb-1">Nama Pelanggan <span class="text-red-500">*</span></label>
@@ -35,7 +25,6 @@
                 </div>
             </div>
 
-            <!-- Tarikh & Package (TETAP SAMA) -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div>
                     <label class="block text-gray-700 font-medium mb-1">Tarikh Event <span class="text-red-500">*</span></label>
@@ -51,13 +40,13 @@
                 </div>
             </div>
 
-            <!-- Alamat Event (TETAP SAMA) -->
+            <!-- Alamat Event -->
             <div>
                 <label class="block text-gray-700 font-medium mb-1">Alamat Event <span class="text-red-500">*</span></label>
                 <textarea name="alamat" required rows="4" placeholder="Contoh: No 12, Jalan Bahagia 5, Taman Seri, 43000 Kajang, Selangor" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-400 focus:border-pink-400 outline-none"></textarea>
             </div>
 
-            <!-- Butiran Pesanan (TETAP SAMA) -->
+            <!-- Butiran Pesanan -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div>
                     <label class="block text-gray-700 font-medium mb-1">Bilangan (Qty) <span class="text-red-500">*</span></label>
@@ -69,7 +58,7 @@
                 </div>
             </div>
 
-            <!-- Bayaran (TETAP SAMA) -->
+            <!-- Bayaran -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
                 <div>
                     <label class="block text-gray-700 font-medium mb-1">Diskaun (RM)</label>
@@ -96,14 +85,8 @@
         </form>
     </div>
 
-    <!-- Senarai Pesanan Terkini (UBAH & TAMBAH HTMX di sini) -->
-    <div id="pesanan-senarai" 
-         hx-get="{{ url_for('pesanan') }}" 
-         hx-trigger="load, submit from:#pesanan-form" 
-         hx-swap="innerHTML"
-         hx-indicator="#loading-indicator"
-         class="bg-white rounded-xl shadow-md p-6">
-
+    <!-- Senarai Pesanan Terkini -->
+    <div class="bg-white rounded-xl shadow-md p-6">
         <h2 class="text-xl font-bold text-pink-600 mb-4">Senarai Pesanan Terkini</h2>
 
         {% if pesanan_list %}
@@ -153,7 +136,7 @@
                             <span class="text-gray-400 text-xs">Tiada Resit</span>
                             {% endif %}
 
-                            <!-- Generate Resit Baru (tanpa HTMX tambahan pada form ini) -->
+                            <!-- Generate Resit Baru (POST biasa, tanpa HTMX) -->
                             <form method="POST" action="{{ url_for('regenerate_resit', bil_no=row['bil_no']) }}" style="display:inline;">
                                 <button type="submit" class="text-xs bg-purple-600 text-white px-3 py-1 rounded hover:bg-purple-700 transition">
                                     Generate Resit Baru
@@ -181,7 +164,7 @@
     </div>
 </div>
 
-<!-- JavaScript: auto kira + validation (TETAP SAMA) -->
+<!-- JavaScript: auto kira + validation -->
 <script>
 function kiraTotal() {
     const qty = parseInt(document.querySelector('[name="qty"]').value) || 0;
