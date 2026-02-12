@@ -256,8 +256,8 @@ def pesanan():
         pdf.ln(8)
         pdf.set_font("Helvetica", "I", 8)
         pdf.set_text_color(0, 0, 0)
-        pdf.multi_cell(0, 5, txt="Terima kasih atas tempahan anda! Baki bayaran hendaklah dijelaskan 3 hari sebelum majlis.")
-        pdf.multi_cell(0, 5, txt="Hubungi kami: 011-15371071 / 014-4007237")
+        pdf.multi_cell(190, 5, txt="Terima kasih atas tempahan anda! Baki bayaran hendaklah dijelaskan 3 hari sebelum majlis.")
+        pdf.multi_cell(190, 5, txt="Hubungi kami: 011-15371071 / 014-4007237")
         pdf.ln(3)
 
         pdf.set_font("Helvetica", "B", 9)
@@ -265,8 +265,8 @@ def pesanan():
         pdf.cell(0, 6, txt="Maklumat Pembayaran", ln=1)
         pdf.set_font("Helvetica", "", 9)
         pdf.set_text_color(0, 0, 0)
-        pdf.cell(0, 5, txt="Maybank Acc No: 151520082883", ln=1)
-        pdf.cell(0, 5, txt="NORMI IDAYU BINTI YUNOS", ln=1)
+        pdf.cell(190, 5, txt="Maybank Acc No: 151520082883", ln=1)
+        pdf.cell(190, 5, txt="NORMI IDAYU BINTI YUNOS", ln=1)
 
         pdf_output = BytesIO()
         pdf.output(pdf_output)
